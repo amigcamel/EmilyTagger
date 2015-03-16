@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load senti_tag %}
+
+{% block header %}
+中文情緒標記
+{% endblock header %}
+
+{% block content %}
+    <div class="panel panel-default">
+        <div class="panel-body">
+            標記設定
+        </div>
+        <div class="panel-footer">
+            <div class="btn-group">
+                <button type="button" data-switch-toggle="state" class="btn btn-default active">Emotion</button>
+                <button type="button" data-switch-toggle="state" class="btn btn-default">Stance</button>
+            </div>
+        </div>
+        </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="row">
+                <div class="col-md-4">
+                    <button class="btn btn-default page-nav" data-val='-1'><span class="glyphicon glyphicon-chevron-left"></span>上一篇</button>
+                </div>
+                <div class="col-md-4">
+                    <input type="number" class="form-control" id="goToPage" placeholder="">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-default page-nav" data-val='1' style="float:right">下一篇<span class="glyphicon glyphicon-chevron-right"></span></button>
+                </div>
+            </div>
+            <div class="clearfix"></div>
+            <br>
+            <div id="cand_text"></div>
+            <br> 
+        </div>
+        <div class="col-md-6">
+            <div id="senti_opts" class="lightbox">
+                <h3 style="text-align:center"><div id="output"></div></h3>
+                <hr>
+                <button class="btn btn-lg happy" data-val=0>高興</button>
+                <button class="btn btn-lg angry" data-val=1>生氣</button>
+                <button class="btn btn-lg sad" data-val=2>悲傷</button>
+                <button class="btn btn-lg afraid" data-val=3>害怕</button>
+                <button class="btn btn-lg surprised" data-val=4>驚訝</button>
+                <button class="btn btn-lg positive" data-val=5>正面</button>
+                <button class="btn btn-lg negative" data-val=6>負面</button>
+            </div>
+            <div id='cat-box'>
+            {% for k, v in senti_ref.items %}
+                <div class="cat" id="cat-{{k}}" style="background:{{v.2}}" >
+                    <h4 style="text-align:center;">{{v.0}}</h4>
+                    {% comment %}
+                    {% for key, value in pairs_by_cat.items %}
+                        {% if k == key %}
+                            {% for w in value %}
+                                <span class="draggable" style="background:#E5E4E2;border-radius:5px;padding:5px;">{{w}}</span> 
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                    {% endcomment %}
+                </div>
+            {% endfor %}
+            </div>
+            <hr>
+            <div id="droppable" class="dp"><span class="glyphicon glyphicon-trash"></span></div>
+            <a id="tagger" data-featherlight="#senti_opts" class="hide"></a>
+            <div class="lightbox" id="opts"></div>
+            {# <div id="droppable2" class="dp" style="display:none">修改</div> #}
+        </div>
+    </div>
+    <div id='updateLog' class="lightbox">
+        <ul>
+            <h4>UPDATE</h4>
+            <li>網頁用AJAX改寫，增進效率與提升使用者經驗</li>
+            <li>自動記錄工作階段；下次開啟此標記系統會自動回覆到上次最後標中之文章</li>
+            <li>改進標記方式：選取字串後，候選標籤會出現在螢幕中心，增加標記速度</li>
+            <li>在已標記之詞上<u>點兩下</u>可快速刪除該詞</li>
+        </ul>
+    </div>
+    <div style="text-align:center;padding-bottom:20px;">
+        <a id='btn-updateLog' class="btn btn-info" data-featherlight='#updateLog'>查看更新</a>
+    </div>
+{% endblock content %}
+
+{% block extra_js %}
+    <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+    <script src="http://cdn.rawgit.com/noelboss/featherlight/1.0.4/release/featherlight.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+    <script>
+
+    last_open_page = parseInt($.cookie('last_open_page'));
+
+    if (isNaN(last_open_page)) {
+        last_open_page = 1;
+        $.cookie('last_open_page', 1);
+        console.log('initialize cookie: last_open_page set to 1');
+    };
+
+    console.log('last_open_page is: '+last_open_page)
+
+    cat_box = $('#cat-box').html();
+
+    $('.page-nav').click(function() {
+        var val = $(this).attr('data-val');
+        last_open_page += parseInt(val);
+        senti_main(last_open_page);
+    });
+
+    /*CopyRight عبد النور التومي 
+    http://abdennour-insat.blogspot.com/2012/09/about-me.html
+    */  
+    function getSelectionText() {
+        var text = "";
+        if (window.getSelection) {
+            text = window.getSelection().toString();
+        } else if (document.selection && document.selection.type != "Control") {
+            text = document.selection.createRange().text;
+        }
+        return text;
+    }
+
+    text_sel = ''
+
+    $(document).ready(function (){
+       $('#cand_text').mouseup(function (e){
+           text_sel = getSelectionText()
+           text_sel = $.trim(text_sel)
+           var max_len = 6
+           if (text_sel != '') {
+               if (text_sel.length > max_len ) {
+                   alert('選擇的字串長度不可以超過'+max_len);
+                   }
+               else {
+                    $("#output").text(text_sel);
+                    $('#tagger').click();
+                    $('#id_cue').val(text_sel);
+                    $('input[name="optradio"]:checked').prop('checked', false);
+                   }
+               }
+          })
+    });
+
+    $("input[name='optradio']").change(function() {
+        var senti_val = $('input[name="optradio"]:checked').val();
+        console.log(senti_val);
+
+        $('#id_tag').val(senti_val);
+
+    });
+
+
+    function remove_cue(tar) {
+        if (window.confirm("確定刪除？")) {
+            {% comment %}
+            window.location.href = '{% url 'api_remove_cue' text_id '_tar' current_page|add:"-1" %}'.replace('_tar', tar);
+            {% endcomment %}
+            $('span.draggable').filter(function() {
+                return $(this).text() === tar;
+            }).hide("puff").delay(10).queue(function(){$(this).remove();}); 
+            var data = {cue: tar, text_id: text_id, csrfmiddlewaretoken: '{{csrf_token}}'};
+            $.post('/api_remove_cue', data, function(response) {
+                senti_main(last_open_page);
+                console.log(response);
+            });
+            {# hide and remove -- http://stackoverflow.com/a/10143347/1105489 #}
+            }
+        else {
+
+            {% comment %}
+            location.reload()
+            {% endcomment %}
+            senti_main(last_open_page);
+            // alert('canceled!');
+        };
+    };
+
+    $('#senti_opts .btn').click(function() {
+        var value = $(this).attr('data-val'),
+            cue = $('#output').text(),
+            data = {cue: cue, value: value, text_id: text_id, csrfmiddlewaretoken: '{{csrf_token}}'};
+        $.post('/api', data, function() {
+            $('.featherlight-close').click();
+            senti_main(last_open_page);
+        });
+    })
+
+    function safeString(string) {
+        return string.replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<')
+    }
+
+    function load_cand_text(text) {
+        $('#cand_text').html(safeString(text));
+    };
+
+    function patch_cat(pairs_by_cat) {
+        $.each(pairs_by_cat, function(key, value) {
+            // console.log(value);
+            value.map(function(word) {
+                $('#cat-'+key).append('<span class="draggable" style="background:#E5E4E2;border-radius:5px;padding:5px;">'+word+'</span> ');
+                return false;
+            });
+        });
+    };
+
+    {% comment %}
+    load_cand_text("{{text|txt_with_color:pairs|linebreaks}}");
+    patch_cat({{pairs_by_cat|to_json|safe}});
+    {% endcomment %}
+
+    function senti_main(last_open_page) {
+        $.post('/get_cand_text/'+last_open_page, {csrfmiddlewaretoken: "{{csrf_token}}"}, function(data) {
+
+            var json = JSON.parse(data),
+                cand_text = json['cand_text'];
+                pairs_by_cat = json['pairs_by_cat'];
+            text_id = json['text_id'];
+
+            console.log(text_id);
+
+            $('#goToPage').val('').attr('placeholder', '目前頁面： '+last_open_page);
+            load_cand_text(cand_text);
+            $('#cat-box').html(cat_box);
+            patch_cat(pairs_by_cat);
+            $.cookie('last_open_page', last_open_page);
+            console.log(last_open_page);
+            $(".draggable").draggable();
+            $("#droppable").droppable({
+                drop: function (event, ui) {
+                    var tar= ui.draggable.text();
+                    remove_cue(tar);
+                }
+            });
+
+            $('.draggable').dblclick(function() {
+                var tar= $(this).text();
+                remove_cue(tar);
+            });
+        });
+    };
+
+    $('#goToPage').keydown(function (e){
+        if(e.keyCode == 13){
+            last_open_page = parseInt($(this).val());
+            senti_main(last_open_page);
+        }
+    });
+
+    $("#goToPage").keyup(function() {
+        $("#goToPage").val(this.value.match(/[0-9]*/));
+    });
+
+
+
+    $( document ).ready(function() {
+        var init_page = last_open_page-1
+        senti_main(last_open_page);
+    });
+
+
+    </script>
+{% endblock extra_js %}
+
+{% block extra_css %}
+    <style>
+    .lightbox {
+        display: none;
+    }
+    .row {padding: 20px;}
+    a:active, a:visited, a:link {color:inherit; text-decoration:none}
+
+    .draggable {cursor:move; font-size:150%;}
+    #cand_text {line-height: 200%;}
+    #joke {color:red;}
+    #draggable {
+        background: #78BA91;
+        display:inline-block;
+    }
+    .dp {
+        vertical-align: middle;
+        display: inline-block;
+        width: 230px;
+        height: 100px;
+        line-height: 100px;
+        margin: 0 10px 0;
+        text-align: center;
+        font-size: 60px;
+        font-weight: normal;
+        border-radius: 60px; 
+        background-color: none;
+    }
+
+    .cat {
+        border-radius: 5px;
+        margin-bottom: 2px;
+        padding: 10px;
+    }
+
+    {% for k, v in senti_ref.items %}
+        .{{v.1}} {
+            background:{{v.2}};
+            -moz-border-radius: 5px;
+            border-radius: 5px;
+            padding: 1px;
+                 }
+    {% endfor %}
+    </style>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css"></style>
+    <link rel="stylesheet" type="text/css" href="http://cdn.rawgit.com/noelboss/featherlight/1.0.4/release/featherlight.min.css">
+{% endblock extra_css %}
+
+{% comment %}
+remove cue 沒有作用！
+document.ready 重複
+頁數起始與結束之值
+url hardcode
+重複標記顏色問題
+remove_cue後無需reload cand_text
+上下篇and goToPage validator
+cat-box改前端
+修改標記（draggable）
+修改所有news開頭為/的id
+{% endcomment %}

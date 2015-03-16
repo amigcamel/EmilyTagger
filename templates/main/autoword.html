@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load staticfiles %}
+
+{% block content %}
+    <h2>Autoword</h2>
+    {% if form %}
+        <form role="form" action="{% url 'autoword' %}" method="post" enctype="multipart/form-data">{% csrf_token %}
+            {{form.as_p}}
+        <input type="submit" value="Submit" class="btn">
+    {% else %}
+         <a href="{% url 'autoword' %}" class="btn btn-info">重新查詢</a>
+         <hr>
+         <h3>{{query}}</h3>
+         <table class="table table-condensed">
+             <tr>
+                 <td>注音</td>
+                 <td> {{res.bopomofo}}</td>
+             </tr>
+             <tr>
+                 <td>漢語拼音</td>
+                 <td>{{res.pinyin}}</td>
+             </tr>
+                 <tr>
+                    <td>例句</td>
+                    <td style="width:90%;">
+                        {% for ex in res.examples %}
+                        <p><span class="ex_title">例句{{forloop.counter}}</span> {{ex|safe|linebreaks}}</p>
+                        {% endfor %}
+                    </td>
+                 </tr>
+         </table>
+    {% endif %}
+{% endblock %}
+
+{% block extra_css %}
+    <style>
+        .ex_title {color:red;font-weight:700;}
+        .hl_word {background-color:#FFE87C;}
+    </style>
+{% endblock extra_css %}
