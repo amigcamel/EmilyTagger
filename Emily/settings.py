@@ -34,7 +34,6 @@ APACHE_ALIAS_NAME = '/' + 'emily'
 # Application definition
 
 INSTALLED_APPS = (
-    'main',
     'senti',
     'misc',
     'account',
