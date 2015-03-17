@@ -12,11 +12,15 @@
         </div>
         <div class="panel-footer">
             <div class="btn-group">
-                <button type="button" data-switch-toggle="state" class="btn btn-default active">Emotion</button>
-                <button type="button" data-switch-toggle="state" class="btn btn-default">Stance</button>
+                <button type="button" class="btn btn-default tag-type">Emotion</button>
+                <button type="button" class="btn btn-default tag-type">Stance</button>
             </div>
         </div>
+        <div class="panel-footer sub-panel hide">
+            <div class="btn-group tag-subtype">
+            </div>
         </div>
+    </div>
     <div class="row">
         <div class="col-md-6">
             <div class="row">
@@ -48,10 +52,11 @@
                 <button class="btn btn-lg negative" data-val=6>負面</button>
             </div>
             <div id='cat-box'>
+            {% comment %}
             {% for k, v in senti_ref.items %}
                 <div class="cat" id="cat-{{k}}" style="background:{{v.2}}" >
                     <h4 style="text-align:center;">{{v.0}}</h4>
-                    {% comment %}
+                    
                     {% for key, value in pairs_by_cat.items %}
                         {% if k == key %}
                             {% for w in value %}
@@ -59,9 +64,10 @@
                             {% endfor %}
                         {% endif %}
                     {% endfor %}
-                    {% endcomment %}
+                    
                 </div>
             {% endfor %}
+            {% endcomment %}
             </div>
             <hr>
             <div id="droppable" class="dp"><span class="glyphicon glyphicon-trash"></span></div>
@@ -90,6 +96,13 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script>
 
+    function catBox() {
+        var senti_ref = JSON.parse(safeString("{{senti_ref|to_json}}"));
+        $.each(senti_ref, function(key, value) {
+            $('#cat-box').append('<div class="cat" id="cat-'+key+'" style="background:'+value[2]+'" ><h4 style="text-align:center;">'+value[0]+'</h4></div>')
+        });        
+    }
+
     last_open_page = parseInt($.cookie('last_open_page'));
 
     if (isNaN(last_open_page)) {
@@ -100,7 +113,7 @@
 
     console.log('last_open_page is: '+last_open_page)
 
-    cat_box = $('#cat-box').html();
+    // cat_box = $('#cat-box').html();
 
     $('.page-nav').click(function() {
         var val = $(this).attr('data-val');
@@ -221,7 +234,10 @@
 
             $('#goToPage').val('').attr('placeholder', '目前頁面： '+last_open_page);
             load_cand_text(cand_text);
-            $('#cat-box').html(cat_box);
+            
+            $('#cat-box').empty()
+            catBox();
+            
             patch_cat(pairs_by_cat);
             $.cookie('last_open_page', last_open_page);
             console.log(last_open_page);
@@ -251,7 +267,35 @@
         $("#goToPage").val(this.value.match(/[0-9]*/));
     });
 
+    function addSubTagBtn(tagType, subTag) {
+        $('.tag-subtype').empty();
+        for (var i=0; i< subTag.length; i++) {
+            $('.tag-subtype').append('<button class="btn btn-default" id="'+tagType+'-'+subTag[i]+'">'+subTag[i]+'</button>');
+        }        
+    };
 
+    function selectSubtype(tagType) {
+        $('[id^="'+tagType+'-"]').click(function() {
+            var tag = $(this).text();
+            console.log(tag);
+            $(this).addClass('active').siblings().removeClass('active');
+        });
+    };
+
+    $('.tag-type').click(function() {
+        var tagType = $(this).text();
+        $(this).addClass('active').siblings().removeClass('active');
+        $('.sub-panel').removeClass('hide');
+        if (tagType === 'Emotion') {
+            var subTag = 'Emo,Mood,Feeling,Attitude,Temperament,Personality,Insult'.split(',');
+            addSubTagBtn(tagType, subTag);
+        }
+        else if (tagType === 'Stance') {
+            var subTag = '發話者,Speech event,立場詞,目標詞,明顯主觀,不明顯主觀,元話語,論辯cue'.split(',');
+            addSubTagBtn(tagType, subTag);
+        };
+        selectSubtype(tagType);
+    });
 
     $( document ).ready(function() {
         var init_page = last_open_page-1
