@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load staticfiles %}
 {% load senti_tag %}
 
 {% block header %}
@@ -40,86 +41,32 @@
             <br> 
         </div>
         <div class="col-md-6">
-            <div id="senti_opts" class="lightbox">
-                <h3 style="text-align:center"><div id="output"></div></h3>
-                <hr>
-                <button class="btn btn-lg happy" data-val=0>高興</button>
-                <button class="btn btn-lg angry" data-val=1>生氣</button>
-                <button class="btn btn-lg sad" data-val=2>悲傷</button>
-                <button class="btn btn-lg afraid" data-val=3>害怕</button>
-                <button class="btn btn-lg surprised" data-val=4>驚訝</button>
-                <button class="btn btn-lg positive" data-val=5>正面</button>
-                <button class="btn btn-lg negative" data-val=6>負面</button>
-            </div>
-            <div id='cat-box'>
-            {% comment %}
-            {% for k, v in senti_ref.items %}
-                <div class="cat" id="cat-{{k}}" style="background:{{v.2}}" >
-                    <h4 style="text-align:center;">{{v.0}}</h4>
-                    
-                    {% for key, value in pairs_by_cat.items %}
-                        {% if k == key %}
-                            {% for w in value %}
-                                <span class="draggable" style="background:#E5E4E2;border-radius:5px;padding:5px;">{{w}}</span> 
-                            {% endfor %}
-                        {% endif %}
-                    {% endfor %}
-                    
-                </div>
-            {% endfor %}
-            {% endcomment %}
-            </div>
+            <div id='cat-box'></div>
             <hr>
             <div id="droppable" class="dp"><span class="glyphicon glyphicon-trash"></span></div>
             <a id="tagger" data-featherlight="#senti_opts" class="hide"></a>
-            <div class="lightbox" id="opts"></div>
-            {# <div id="droppable2" class="dp" style="display:none">修改</div> #}
+            <a id="tagger2" data-featherlight="#senti_opts2" class="hide"></a>
+            <a id="tagger3" data-featherlight="#senti_opts3" class="hide"></a>
         </div>
     </div>
-    <div id='updateLog' class="lightbox">
-        <ul>
-            <h4>UPDATE</h4>
-            <li>網頁用AJAX改寫，增進效率與提升使用者經驗</li>
-            <li>自動記錄工作階段；下次開啟此標記系統會自動回覆到上次最後標中之文章</li>
-            <li>改進標記方式：選取字串後，候選標籤會出現在螢幕中心，增加標記速度</li>
-            <li>在已標記之詞上<u>點兩下</u>可快速刪除該詞</li>
-        </ul>
-    </div>
-    <div style="text-align:center;padding-bottom:20px;">
-        <a id='btn-updateLog' class="btn btn-info" data-featherlight='#updateLog'>查看更新</a>
-    </div>
+    {% include 'update.html' %}
+    {% include 'options.html' %}
+
 {% endblock content %}
 
 {% block extra_js %}
+    {# <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script> #}
     <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
-    <script src="http://cdn.rawgit.com/noelboss/featherlight/1.0.4/release/featherlight.min.js"></script>
+    <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
+    <script src="{% static "js/featherlight.js" %}"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
     <script>
 
-    function catBox() {
-        var senti_ref = JSON.parse(safeString("{{senti_ref|to_json}}"));
-        $.each(senti_ref, function(key, value) {
+    function catBox(json) {
+        $.each(json, function(key, value) {
             $('#cat-box').append('<div class="cat" id="cat-'+key+'" style="background:'+value[2]+'" ><h4 style="text-align:center;">'+value[0]+'</h4></div>')
         });        
-    }
-
-    last_open_page = parseInt($.cookie('last_open_page'));
-
-    if (isNaN(last_open_page)) {
-        last_open_page = 1;
-        $.cookie('last_open_page', 1);
-        console.log('initialize cookie: last_open_page set to 1');
     };
-
-    console.log('last_open_page is: '+last_open_page)
-
-    // cat_box = $('#cat-box').html();
-
-    $('.page-nav').click(function() {
-        var val = $(this).attr('data-val');
-        last_open_page += parseInt(val);
-        senti_main(last_open_page);
-    });
 
     /*CopyRight عبد النور التومي 
     http://abdennour-insat.blogspot.com/2012/09/about-me.html
@@ -132,43 +79,10 @@
             text = document.selection.createRange().text;
         }
         return text;
-    }
-
-    text_sel = ''
-
-    $(document).ready(function (){
-       $('#cand_text').mouseup(function (e){
-           text_sel = getSelectionText()
-           text_sel = $.trim(text_sel)
-           var max_len = 6
-           if (text_sel != '') {
-               if (text_sel.length > max_len ) {
-                   alert('選擇的字串長度不可以超過'+max_len);
-                   }
-               else {
-                    $("#output").text(text_sel);
-                    $('#tagger').click();
-                    $('#id_cue').val(text_sel);
-                    $('input[name="optradio"]:checked').prop('checked', false);
-                   }
-               }
-          })
-    });
-
-    $("input[name='optradio']").change(function() {
-        var senti_val = $('input[name="optradio"]:checked').val();
-        console.log(senti_val);
-
-        $('#id_tag').val(senti_val);
-
-    });
-
+    };
 
     function remove_cue(tar) {
         if (window.confirm("確定刪除？")) {
-            {% comment %}
-            window.location.href = '{% url 'api_remove_cue' text_id '_tar' current_page|add:"-1" %}'.replace('_tar', tar);
-            {% endcomment %}
             $('span.draggable').filter(function() {
                 return $(this).text() === tar;
             }).hide("puff").delay(10).queue(function(){$(this).remove();}); 
@@ -180,24 +94,9 @@
             {# hide and remove -- http://stackoverflow.com/a/10143347/1105489 #}
             }
         else {
-
-            {% comment %}
-            location.reload()
-            {% endcomment %}
             senti_main(last_open_page);
-            // alert('canceled!');
         };
     };
-
-    $('#senti_opts .btn').click(function() {
-        var value = $(this).attr('data-val'),
-            cue = $('#output').text(),
-            data = {cue: cue, value: value, text_id: text_id, csrfmiddlewaretoken: '{{csrf_token}}'};
-        $.post('/api', data, function() {
-            $('.featherlight-close').click();
-            senti_main(last_open_page);
-        });
-    })
 
     function safeString(string) {
         return string.replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<')
@@ -217,11 +116,6 @@
         });
     };
 
-    {% comment %}
-    load_cand_text("{{text|txt_with_color:pairs|linebreaks}}");
-    patch_cat({{pairs_by_cat|to_json|safe}});
-    {% endcomment %}
-
     function senti_main(last_open_page) {
         $.post('/get_cand_text/'+last_open_page, {csrfmiddlewaretoken: "{{csrf_token}}"}, function(data) {
 
@@ -234,11 +128,26 @@
 
             $('#goToPage').val('').attr('placeholder', '目前頁面： '+last_open_page);
             load_cand_text(cand_text);
-            
-            $('#cat-box').empty()
-            catBox();
-            
-            patch_cat(pairs_by_cat);
+
+            if (tagType == 'Emotion') {
+                var refName = 'senti_ref'
+            }
+            else if (tagType == 'Stance') {
+                var refName = 'senti_ref2'
+            }
+
+            var post_data = {'refName': refName, csrfmiddlewaretoken: '{{csrf_token}}'};
+
+            $.post('/get_ref', post_data, function(json) {
+                var json = JSON.parse(json);
+                $.each(json, function(key, value) {
+                    $('.'+value[1]).css('background', value[2]);
+                });
+                $('#cat-box').empty();
+                catBox(json);
+                patch_cat(pairs_by_cat);
+            });
+
             $.cookie('last_open_page', last_open_page);
             console.log(last_open_page);
             $(".draggable").draggable();
@@ -256,6 +165,90 @@
         });
     };
 
+    function addSubTagBtn(tagType, subTag) {
+        $('.tag-subtype').empty();
+        for (var i=0; i< subTag.length; i++) {
+            $('.tag-subtype').append('<button class="btn btn-default" id="'+tagType+'-'+subTag[i]+'">'+subTag[i]+'</button>');
+        }        
+    };
+
+    function selectSubtype(tagType) {
+        $('[id^="'+tagType+'-"]').click(function() {
+            tag = $(this).text();
+            $.cookie('tag', tag);
+            console.log(tag);
+            $(this).addClass('active').siblings().removeClass('active');
+        });
+    };
+
+
+    last_open_page = parseInt($.cookie('last_open_page'));
+    text_sel = ''
+
+    if (isNaN(last_open_page)) {
+        last_open_page = 1;
+        $.cookie('last_open_page', 1);
+        console.log('initialize cookie: last_open_page set to 1');
+    };
+
+    console.log('last_open_page is: '+last_open_page);
+
+    $('.page-nav').click(function() {
+        var val = $(this).attr('data-val');
+        last_open_page += parseInt(val);
+        senti_main(last_open_page);
+    })
+
+    $(document).ready(function (){
+       $('#cand_text').mouseup(function (e){
+           text_sel = getSelectionText()
+           text_sel = $.trim(text_sel)
+           var max_len = 6
+           if (text_sel != '') {
+               if (text_sel.length > max_len ) {
+                   alert('選擇的字串長度不可以超過'+max_len);
+                   }
+               else {
+                    if (tagType == 'Emotion') {
+                            if (tag == 'Emo' || tag == 'Mood') {
+                                $("#output").text(text_sel);
+                                $('#tagger').click();
+                                $('input[name="optradio"]:checked').prop('checked', false);
+                            }
+                            else if (tag == 'Feeling' || tag == 'Attitude' || tag == 'Temperament' || tag == 'Personality') {
+                                $("#output2").text(text_sel);
+                                $('#tagger2').click();
+                                $('input[name="optradio"]:checked').prop('checked', false);
+                            }
+                            else if (tag == 'Insult') {
+                                $("#output3").text(text_sel);
+                                $('#tagger3').click();
+                                $('input[name="optradio"]:checked').prop('checked', false);
+                            }
+                        }
+                   }
+               }
+          })
+    });
+
+    $("input[name='optradio']").change(function() {
+        var senti_val = $('input[name="optradio"]:checked').val();
+        console.log(senti_val);
+
+        $('#id_tag').val(senti_val);
+
+    });
+
+    $('#senti_opts .btn').click(function() {
+        var value = $(this).attr('data-val'),
+            cue = $('#output').text(),
+            data = {cue: cue, value: value, text_id: text_id, csrfmiddlewaretoken: '{{csrf_token}}'};
+        $.post('/api', data, function() {
+            $('.featherlight-close').click();
+            senti_main(last_open_page);
+        });
+    })
+
     $('#goToPage').keydown(function (e){
         if(e.keyCode == 13){
             last_open_page = parseInt($(this).val());
@@ -267,41 +260,40 @@
         $("#goToPage").val(this.value.match(/[0-9]*/));
     });
 
-    function addSubTagBtn(tagType, subTag) {
-        $('.tag-subtype').empty();
-        for (var i=0; i< subTag.length; i++) {
-            $('.tag-subtype').append('<button class="btn btn-default" id="'+tagType+'-'+subTag[i]+'">'+subTag[i]+'</button>');
-        }        
-    };
-
-    function selectSubtype(tagType) {
-        $('[id^="'+tagType+'-"]').click(function() {
-            var tag = $(this).text();
-            console.log(tag);
-            $(this).addClass('active').siblings().removeClass('active');
-        });
-    };
-
     $('.tag-type').click(function() {
-        var tagType = $(this).text();
+        tagType = $(this).text();
+        $.cookie('tagType', tagType);
+        $.removeCookie('tag');
+        console.log(tagType);
         $(this).addClass('active').siblings().removeClass('active');
         $('.sub-panel').removeClass('hide');
         if (tagType === 'Emotion') {
             var subTag = 'Emo,Mood,Feeling,Attitude,Temperament,Personality,Insult'.split(',');
             addSubTagBtn(tagType, subTag);
+            senti_main(last_open_page);
         }
         else if (tagType === 'Stance') {
-            var subTag = '發話者,Speech event,立場詞,目標詞,明顯主觀,不明顯主觀,元話語,論辯cue'.split(',');
-            addSubTagBtn(tagType, subTag);
+            $('.sub-panel').addClass('hide');
+            senti_main(last_open_page);
+            // var subTag = '發話者,Speech event,立場詞,目標詞,明顯主觀,不明顯主觀,元話語,論辯cue'.split(',');
+            // addSubTagBtn(tagType, subTag);
         };
         selectSubtype(tagType);
     });
 
     $( document ).ready(function() {
         var init_page = last_open_page-1
-        senti_main(last_open_page);
-    });
+        
+        tagType = $.cookie('tagType');
+        tag = $.cookie('tag');
 
+        senti_main(last_open_page);
+
+        $('.tag-type').filter(function() {
+            return $(this).text() === tagType;
+        }).click();
+        $('#'+tagType+'-'+tag).click();
+    });
 
     </script>
 {% endblock extra_js %}
@@ -341,28 +333,26 @@
         padding: 10px;
     }
 
-    {% for k, v in senti_ref.items %}
-        .{{v.1}} {
-            background:{{v.2}};
-            -moz-border-radius: 5px;
-            border-radius: 5px;
-            padding: 1px;
-                 }
-    {% endfor %}
+    .highlight {
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+        padding: 1px;
+    }
+
     </style>
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css"></style>
-    <link rel="stylesheet" type="text/css" href="http://cdn.rawgit.com/noelboss/featherlight/1.0.4/release/featherlight.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static "css/featherlight.css" %}">
 {% endblock extra_css %}
 
 {% comment %}
-remove cue 沒有作用！
+
 document.ready 重複
 頁數起始與結束之值
 url hardcode
 重複標記顏色問題
 remove_cue後無需reload cand_text
 上下篇and goToPage validator
-cat-box改前端
 修改標記（draggable）
 修改所有news開頭為/的id
+加上顏色後變色並持續一段時間
 {% endcomment %}

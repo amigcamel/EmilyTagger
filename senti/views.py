@@ -4,17 +4,17 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 # from .forms import SentiTagForm
+from django.http import JsonResponse
 from .mongo import *
-from .ref import senti_ref
+from .ref import senti_ref, senti_ref2
 from urllib import unquote
 import re
 from misc.templatetags.senti_tag import txt_with_color
 import json
 
 
-def main(request, current_page=None):
-    return render_to_response('senti_main.html', {'senti_ref': senti_ref}, context_instance=RequestContext(request))
-
+def main(request):
+    return render_to_response('senti_main.html', context_instance=RequestContext(request))
     # if current_page is None:
     #     current_page = request.COOKIES.get('last_open_page', 1)
 
@@ -42,6 +42,18 @@ def main(request, current_page=None):
     # return res
 
 
+def get_ref(request):
+    res = request_parser(request)
+    ref_name = res['refName']
+    if ref_name == 'senti_ref':
+        ref = json.dumps(senti_ref)
+    elif ref_name == 'senti_ref2':
+        ref = json.dumps(senti_ref2)
+    # return JsonResponse(senti_ref)
+    print 'ref_name: %s' % ref_name
+    return HttpResponse(ref)
+
+
 def get_cand_text(request, page_num):
     if int(page_num) < 1:
         return HttpResponseRedirect(reverse('index'))
@@ -61,6 +73,7 @@ def get_cand_text(request, page_num):
     pairs = read_pairs(text_id, request.user.username)
     cand_text = txt_with_color(cand_text, pairs)
     fin = {'pairs_by_cat': pairs_by_cat, 'cand_text': cand_text, 'text_id': text_id}
+    # return JsonResponse(fin)
     return HttpResponse(json.dumps(fin))
 
 
