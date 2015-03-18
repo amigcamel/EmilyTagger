@@ -47,6 +47,7 @@
             <a id="tagger" data-featherlight="#senti_opts" class="hide"></a>
             <a id="tagger2" data-featherlight="#senti_opts2" class="hide"></a>
             <a id="tagger3" data-featherlight="#senti_opts3" class="hide"></a>
+            <a id="tagger4" data-featherlight="#senti_opts4" class="hide"></a>
         </div>
     </div>
     {% include 'update.html' %}
@@ -87,7 +88,7 @@
                 return $(this).text() === tar;
             }).hide("puff").delay(10).queue(function(){$(this).remove();}); 
             var data = {cue: tar, text_id: text_id, csrfmiddlewaretoken: '{{csrf_token}}'};
-            $.post('/api_remove_cue', data, function(response) {
+            $.post('{% url "api_remove_cue" %}', data, function(response) {
                 senti_main(last_open_page);
                 console.log(response);
             });
@@ -117,7 +118,8 @@
     };
 
     function senti_main(last_open_page) {
-        $.post('/get_cand_text/'+last_open_page, {csrfmiddlewaretoken: "{{csrf_token}}"}, function(data) {
+        var post_data = {'last_open_page': last_open_page, csrfmiddlewaretoken: "{{csrf_token}}"};
+        $.post('{% url "get_cand_text" %}', post_data, function(data) {
 
             var json = JSON.parse(data),
                 cand_text = json['cand_text'];
@@ -138,7 +140,7 @@
 
             var post_data = {'refName': refName, csrfmiddlewaretoken: '{{csrf_token}}'};
 
-            $.post('/get_ref', post_data, function(json) {
+            $.post('{% url "get_ref" %}', post_data, function(json) {
                 var json = JSON.parse(json);
                 $.each(json, function(key, value) {
                     $('.'+value[1]).css('background', value[2]);
@@ -209,7 +211,7 @@
                    alert('選擇的字串長度不可以超過'+max_len);
                    }
                else {
-                    if (tagType == 'Emotion') {
+                        if (tagType == 'Emotion') {
                             if (tag == 'Emo' || tag == 'Mood') {
                                 $("#output").text(text_sel);
                                 $('#tagger').click();
@@ -226,6 +228,11 @@
                                 $('input[name="optradio"]:checked').prop('checked', false);
                             }
                         }
+                       else if (tagType == 'Stance') {
+                            $("#output4").text(text_sel);
+                            $('#tagger4').click();
+                            $('input[name="optradio"]:checked').prop('checked', false);
+                       }
                    }
                }
           })
@@ -243,7 +250,7 @@
         var value = $(this).attr('data-val'),
             cue = $('#output').text(),
             data = {cue: cue, value: value, text_id: text_id, csrfmiddlewaretoken: '{{csrf_token}}'};
-        $.post('/api', data, function() {
+        $.post('{% url "api" %}', data, function() {
             $('.featherlight-close').click();
             senti_main(last_open_page);
         });

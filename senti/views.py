@@ -54,7 +54,10 @@ def get_ref(request):
     return HttpResponse(ref)
 
 
-def get_cand_text(request, page_num):
+def get_cand_text(request):
+    res = request_parser(request)
+    page_num = res['last_open_page']
+
     if int(page_num) < 1:
         return HttpResponseRedirect(reverse('index'))
     elif int(page_num) >= 1 and int(page_num) <= 499:
