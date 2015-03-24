@@ -152,18 +152,21 @@
 
             $.cookie('last_open_page', last_open_page);
             console.log(last_open_page);
-            $(".draggable").draggable();
-            $("#droppable").droppable({
-                drop: function (event, ui) {
-                    var tar= ui.draggable.text();
-                    remove_cue(tar);
-                }
-            });
 
-            $('.draggable').dblclick(function() {
-                var tar= $(this).text();
-                remove_cue(tar);
-            });
+            setTimeout(function() {
+                $(".draggable").draggable();
+                $("#droppable").droppable({
+                    drop: function (event, ui) {
+                        var tar= ui.draggable.text();
+                        remove_cue(tar);
+                    }
+                });
+                $('.draggable').dblclick(function() {
+                    var tar= $(this).text();
+                    remove_cue(tar);
+                });
+            }, 500);
+
         });
     };
 
@@ -201,42 +204,42 @@
         senti_main(last_open_page);
     })
 
-    $(document).ready(function (){
-       $('#cand_text').mouseup(function (e){
-           text_sel = getSelectionText()
-           text_sel = $.trim(text_sel)
-           var max_len = 6
-           if (text_sel != '') {
-               if (text_sel.length > max_len ) {
-                   alert('選擇的字串長度不可以超過'+max_len);
-                   }
-               else {
-                        if (tagType == 'Emotion') {
-                            if (tag == 'Emo' || tag == 'Mood') {
-                                $("#output").text(text_sel);
-                                $('#tagger').click();
-                                $('input[name="optradio"]:checked').prop('checked', false);
-                            }
-                            else if (tag == 'Feeling' || tag == 'Attitude' || tag == 'Temperament' || tag == 'Personality') {
-                                $("#output2").text(text_sel);
-                                $('#tagger2').click();
-                                $('input[name="optradio"]:checked').prop('checked', false);
-                            }
-                            else if (tag == 'Insult') {
-                                $("#output3").text(text_sel);
-                                $('#tagger3').click();
-                                $('input[name="optradio"]:checked').prop('checked', false);
-                            }
-                        }
-                       else if (tagType == 'Stance') {
-                            $("#output4").text(text_sel);
-                            $('#tagger4').click();
+    
+   $('#cand_text').mouseup(function (e){
+       text_sel = getSelectionText()
+       text_sel = $.trim(text_sel)
+       var max_len = 6
+       if (text_sel != '') {
+           if (text_sel.length > max_len ) {
+               alert('選擇的字串長度不可以超過'+max_len);
+               }
+           else {
+                    if (tagType == 'Emotion') {
+                        if (tag == 'Emo' || tag == 'Mood') {
+                            $("#output").text(text_sel);
+                            $('#tagger').click();
                             $('input[name="optradio"]:checked').prop('checked', false);
-                       }
+                        }
+                        else if (tag == 'Feeling' || tag == 'Attitude' || tag == 'Temperament' || tag == 'Personality') {
+                            $("#output2").text(text_sel);
+                            $('#tagger2').click();
+                            $('input[name="optradio"]:checked').prop('checked', false);
+                        }
+                        else if (tag == 'Insult') {
+                            $("#output3").text(text_sel);
+                            $('#tagger3').click();
+                            $('input[name="optradio"]:checked').prop('checked', false);
+                        }
+                    }
+                   else if (tagType == 'Stance') {
+                        $("#output4").text(text_sel);
+                        $('#tagger4').click();
+                        $('input[name="optradio"]:checked').prop('checked', false);
                    }
                }
-          })
-    });
+           }
+      })
+
 
     $("input[name='optradio']").change(function() {
         var senti_val = $('input[name="optradio"]:checked').val();
@@ -288,19 +291,23 @@
         selectSubtype(tagType);
     });
 
-    $( document ).ready(function() {
+
+
+
+    $(function() {
         var init_page = last_open_page-1
         
         tagType = $.cookie('tagType');
         tag = $.cookie('tag');
 
-        senti_main(last_open_page);
+        // senti_main(last_open_page);
 
         $('.tag-type').filter(function() {
             return $(this).text() === tagType;
         }).click();
         $('#'+tagType+'-'+tag).click();
     });
+
 
     </script>
 {% endblock extra_js %}
