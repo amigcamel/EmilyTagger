@@ -4,6 +4,6 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
     url('^emilytagger/', include('senti.urls')),
-    url('^account/', include('account.urls')),
-    url('^admin/', include(admin.site.urls)),
+    url('^emilytagger/account/', include('account.urls')),
+    url('^emilytagger/admin/', include(admin.site.urls)),
 )
