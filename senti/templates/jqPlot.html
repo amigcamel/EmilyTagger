@@ -1,0 +1,126 @@
+<div class="modal modal-wide fade" id="distPie">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">標記分佈</h4>
+            </div>
+            <div class="modal-body">
+                <div class="modal-body" id="pieBtnArea"></div>
+                <div class="row">
+                    <div class="col-lg-offset-3 col-lg-6">
+                        <div id="pie8" style="width:500px;height:500px"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="alert alert-info" role="alert">
+                <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                已標記之數量： <span id="totalnum"></span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+{% verbatim %}
+<script id="pieBtns" type="text/x-handlebars-template">
+    {{#each objects}}
+        <button class="btn btn-default btn-pie">{{this}}</button>
+    {{/each}}
+</script>
+{% endverbatim %}
+
+<script>
+function drawDistPie(groupName) {
+    var seriesColors = jqData['seriesColors'],
+        groups = jqData.groups[groupName],
+        percentage = groups['percentage'],
+        totalnum = groups['totalnum'],
+        sum = eval(totalnum.join("+"));
+
+    $('#totalnum').html(sum);
+
+    var plot8 = $.jqplot('pie8', [percentage], {
+        grid: {
+            drawBorder: false, 
+            drawGridlines: false,
+            background: '#ffffff',
+            shadow:false
+        },
+        
+        seriesColors: seriesColors,
+
+        axesDefaults: {
+             
+        },
+        seriesDefaults:{
+            renderer:$.jqplot.PieRenderer,
+            rendererOptions: {
+                showDataLabels: true
+            },
+            highlighter: {
+                show: true,
+                formatString:'%s', 
+                tooltipLocation:'sw', 
+                useAxesFormatters:false
+            }
+        },
+        highlighter: {
+            tooltipContentEditor: function (str, seriesIndex, pointIndex) {
+                return '數量: '+totalnum[pointIndex];
+                },
+            show: true,
+            showTooltip: true,
+            formatString:'%s',
+            tooltipLocation: 'ne',
+            useAxesFormatters: false
+        },
+        legend: {
+            show: true,
+            rendererOptions: {
+                numberRows: 1
+            },
+            location: 's'
+        }
+    });
+};
+
+$('#distPie').on('shown.bs.modal', function (e) {
+    var url = '{% url "draw_dist_pie" "__________" %}'.replace('__________', tag);
+    var target = $('#distPie > div.modal-dialog > div > div.modal-body');
+    var spinner = new Spinner().spin();
+    target.append(spinner.el);
+
+    $.get(url, function(data) {
+        jqData = JSON.parse(data);
+        spinner.stop();
+        var btns = Object.keys(jqData.groups),
+            source   = $("#pieBtns").html(),
+            template = Handlebars.compile(source),
+            html = template({objects: btns});
+        $('#pieBtnArea').append(html);
+
+        $('.btn-pie').last().click();
+        
+    })
+});
+
+$(document).on('click', '.btn-pie', function() {
+    $('#pie8').empty();
+    $(this).addClass('active').siblings().removeClass('active');
+    var el = '#' + $(this).text();
+    $(el).removeClass('hide').siblings().addClass('hide');
+    drawDistPie($(this).text());
+});
+
+{# destroy Bootstrap3 modal when closinig #}
+$("#distPie").on('hidden.bs.modal', function () {
+    $(this).data('bs.modal', null);
+    $('.btn-pie').remove();
+    $('#pie8').empty(); {# if not empty this, pie will not highligh anymore until refreshing page #}
+    $('#totalnum').empty();
+});
+
+</script>

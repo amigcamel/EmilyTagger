@@ -10,7 +10,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-import glob
+# import glob
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -27,16 +27,10 @@ TEMPLATE_DEBUG = True
 
 ALLOWED_HOSTS = ['140.112.147.131']
 
-# This should conform to the alias in apache settings (httpd.conf) --
-# commenter: Aji
-APACHE_ALIAS_NAME = '/' + 'emily'
 
 # Application definition
 
 INSTALLED_APPS = (
-    'senti',
-    'misc',
-    'account',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,6 +38,13 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 )
+
+INSTALLED_APPS_LOCAL = (
+    'senti',
+    'account',
+)
+
+INSTALLED_APPS += INSTALLED_APPS_LOCAL
 
 MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -93,11 +94,34 @@ STATICFILES_DIRS = (
 
 
 # TEMPLATE PATH
-TEMPLATE_DIRS = tuple(glob.glob(os.path.join(BASE_DIR, 'templates/*')))
+TEMPLATE_DIRS = tuple([os.path.join(BASE_DIR, app, 'templates') for app in INSTALLED_APPS_LOCAL])
+TEMPLATE_DIRS += (os.path.join(BASE_DIR, 'templates'), )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
     'django.contrib.auth.context_processors.auth',
 )
 
-# if os.environ['HOME'] == '/Users/achiii':
+
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'propagate': True,
+            'level': 'ERROR',
+        }
+    },
+}
+
+
+# UNQLITE_DB_PATH = os.path.join(BASE_DIR, 'dbs')
+RLITE_DB_PATH = os.path.join(BASE_DIR, 'dbs')
+
+TAG_PATH = os.path.join(BASE_DIR, 'senti', 'ref.json')

@@ -1,0 +1,60 @@
+{% verbatim %}
+
+    <script id="cat-template" type="text/x-handlebars-template">
+            {{#each objects}}
+                <div class="cat" id="cat-{{@index}}" style="background:{{this.[1]}}">
+                    <h4 style="text-align:center;">{{this.[0]}}</h4>
+                </div>
+            {{/each}}
+    </script>
+
+    <script id="opt-template" type="text/x-handlebars-template">
+        {{#each objects}}
+            <button class="btn btn-lg box" style="background:{{this.[1]}}" data-val={{@index}}>{{this.[0]}}</button>
+        {{/each}}
+    </script>
+
+    <script id="tag-panel" type="text/x-handlebars-template">
+        <div class="panel panel-default" data-intro="可自定義的項目">
+            <div class="panel-body">
+                標記設定
+            </div>
+            <div class="panel-footer">
+                <div class="btn-group">
+                    {{#each this}}
+                        <button type="button" class="btn btn-default tag-type">{{@key}}</button>
+                    {{/each}}
+                </div>
+            </div>
+            {{#each this}}
+                <div id="{{@key}}" class="panel-footer sub-panel hide">
+                    <div class="btn-group tag-subtype">
+                        {{#each this}}
+                            <button class="btn btn-default btn-subtag">{{@key}}</button>
+                        {{/each}}
+                    </div>
+                </div>
+            {{/each}}
+        </div>
+    </script>
+
+    <script>
+    function get_ref(subtag) {
+
+        var catSource   = $("#cat-template").html();
+        var catTemplate = Handlebars.compile(catSource);
+        var catHtml = catTemplate({objects: ref[subtag]});
+
+        var optSource   = $("#opt-template").html();
+        var optTemplate = Handlebars.compile(optSource);
+        var optHtml = optTemplate({objects: ref[subtag]});
+
+        $('#cat-box').html(catHtml);
+        $('#options').html(optHtml);
+        activateTagButton();
+        patch_cat();
+        
+    };
+
+    </script>
+{% endverbatim %}

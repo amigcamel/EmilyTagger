@@ -1,6 +1,7 @@
-#-*-coding:utf8-*-
+# -*-coding:utf8-*-
 from pymongo import Connection
 from ref import senti_ref
+
 
 c = Connection(host='localhost', port=27017)
 db = c['senti_user']
@@ -22,23 +23,23 @@ def remove_cue(text_id, cue, user):
     db[user].update({'_id': text_id}, {'$unset': {'tags.%s' % cue: 1}})
 
 
-def update(text_id, cue, tag, user):
-    if not user:
-        user = 'guest'
-    db[user].update({'_id': text_id}, {'$set': {'tags.%s' % cue: tag}})
+# def update(text_id, cue, tag, user):
+#     if not user:
+#         user = 'guest'
+#     db[user].update({'_id': text_id}, {'$set': {'tags.%s' % cue: tag}})
 
 
-def read_pairs(text_id, user):
-    if not user:
-        user = 'guest'
-    while True:
-        try:
-            res = db[user].find({'_id': text_id}, {'tags': 1}).next()['tags']
-            break
-        except StopIteration:
-            create(text_id, user)
-            continue
-    return res
+# def read_pairs(text_id, user):
+#     if not user:
+#         user = 'guest'
+#     while True:
+#         try:
+#             res = db[user].find({'_id': text_id}, {'tags': 1}).next()['tags']
+#             break
+#         except StopIteration:
+#             create(text_id, user)
+#             continue
+#     return res
 
 
 def read_by_cat(text_id, user):

@@ -1,0 +1,79 @@
+<div class="modal modal-wide fade" id="freqDist">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">詞頻分佈</h4>
+            </div>
+            <div class="modal-body" id="freqDistModalBody"></div>
+        </div>
+    </div>
+</div>
+
+
+{% verbatim %}
+<script id="hb_freqDist" type="text/x-handlebars-template">
+    {{#each objects}}
+        <button class="btn btn-default btn-freqDist">{{this.[0]}}</button>
+    {{/each}}
+    <br><br>
+    <div style="overflow:auto;height:300px;">
+    {{#each objects}}
+        
+            <table class="table table-striped hide" id="{{this.[0]}}">
+                <thead>
+                    <tr>
+                        <th>標記詞</th>
+                        <th>出現次數</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each this.[1]}}
+                    <tr>
+                        <td>{{this.[0]}}</td>
+                        <td>{{this.[1]}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        
+    {{/each}}
+    </div>
+</script>
+{% endverbatim %}
+
+
+<script type="text/javascript">
+    setTimeout(function() {
+        $('#freqDist').on('shown.bs.modal', function (e) {
+            var target = $('#freqDistModalBody');
+            var spinner = new Spinner().spin();
+            target.append(spinner.el);
+
+            var url = '{% url "get_freq_dist" "__________" %}'.replace('__________', tag);
+            $.get(url, function(data) {
+                data = JSON.parse(data);
+                spinner.stop();
+                source   = $("#hb_freqDist").html();
+                template = Handlebars.compile(source);
+                html = template({objects: data});
+                $('#freqDistModalBody').append(html);
+
+                $('.btn-freqDist').click(function() {
+                    $(this).addClass('active').siblings().removeClass('active');
+                    var el = '#' + $(this).text();
+                    $(el).removeClass('hide').siblings().addClass('hide');
+                })
+
+                $('.btn-freqDist').last().click();
+            })
+        });
+
+        $("#freqDist").on('hidden.bs.modal', function () {
+            $(this).data('bs.modal', null);
+            $('#freqDistModalBody').empty();
+        });
+
+    }, 1000);
+
+</script>

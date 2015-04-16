@@ -1,5 +1,14 @@
+BTrees==4.1.2
+coloredlogs==0.8
 Django==1.7.4
-django-registration==1.0
 gnureadline==6.3.3
+hirlite==0.1.1
 ipython==2.4.1
-pymongo==2.8
+persistent==4.0.9
+six==1.9.0
+transaction==1.4.3
+unqlite==0.1.9
+zc.lockfile==1.1.0
+ZConfig==3.0.4
+zdaemon==4.0.1
+zope.interface==4.1.2

@@ -1,35 +1,36 @@
 {% extends 'base.html' %}
 {% load staticfiles %}
-{% load senti_tag %}
 
 {% block header %}
-中文情緒標記
+中文情感標記
 {% endblock header %}
 
 {% block content %}
-    <div class="panel panel-default">
-        <div class="panel-body">
-            標記設定
-        </div>
-        <div class="panel-footer">
-            <div class="btn-group">
-                <button type="button" class="btn btn-default tag-type">Emotion</button>
-                <button type="button" class="btn btn-default tag-type">Stance</button>
+    
+        <div class="row">
+            <div class="col-lg-4">
+                <button class="btn btn-primary" data-toggle="modal" data-target="#distPie" data-intro="檢視當前用戶目前的標記分佈">標記分佈</button>
+                <button class="btn btn-primary" data-toggle="modal" data-target="#postDist">標記狀態</button>
+                <button class="btn btn-primary" data-toggle="modal" data-target="#freqDist">詞頻分佈</button>
             </div>
-        </div>
-        <div class="panel-footer sub-panel hide">
-            <div class="btn-group tag-subtype">
+            <div class="col-lg-5" style="padding-top:10px;">
+                <span>字體大小</span>
+                <div id="font-slider"></div>
             </div>
+
         </div>
-    </div>
-    <div class="row">
+
+    <br>
+    <br>
+    <div id="tag-panel-wrapper"></div>
+    <div class="row _main">
         <div class="col-md-6">
             <div class="row">
                 <div class="col-md-4">
                     <button class="btn btn-default page-nav" data-val='-1'><span class="glyphicon glyphicon-chevron-left"></span>上一篇</button>
                 </div>
                 <div class="col-md-4">
-                    <input type="number" class="form-control" id="goToPage" placeholder="">
+                    <input type="number" class="form-control" id="goToPage" placeholder="" data-intro="直接輸入到達指定頁碼">
                 </div>
                 <div class="col-md-4">
                     <button class="btn btn-default page-nav" data-val='1' style="float:right">下一篇<span class="glyphicon glyphicon-chevron-right"></span></button>
@@ -37,37 +38,52 @@
             </div>
             <div class="clearfix"></div>
             <br>
-            <div id="cand_text"></div>
+            <div id="cand_text" data-intro="選取要標記的字串後，標記選項即會跳出"></div>
             <br> 
         </div>
         <div class="col-md-6">
-            <div id='cat-box'></div>
+            <div id='cat-box' data-intro="這裡顯示您已標記的字串，在該字串上點兩下即可刪除"></div>
+            {% comment %}
             <hr>
-            <div id="droppable" class="dp"><span class="glyphicon glyphicon-trash"></span></div>
+            <div id="droppable" class="dp" data-intro="將字串拖拉至此亦可刪除（與在該字串上點兩下功能相同）">
+                <span class="glyphicon glyphicon-trash"></span>
+            </div>
+            {% endcomment %}
+
             <a id="tagger" data-featherlight="#senti_opts" class="hide"></a>
-            <a id="tagger2" data-featherlight="#senti_opts2" class="hide"></a>
-            <a id="tagger3" data-featherlight="#senti_opts3" class="hide"></a>
-            <a id="tagger4" data-featherlight="#senti_opts4" class="hide"></a>
+
         </div>
     </div>
-    {% include 'update.html' %}
-    {% include 'options.html' %}
 
+    <div id="senti_opts" class="lightbox">
+        <h3 style="text-align:center">
+            <div id="output"></div>
+        </h3>
+        <hr>
+        <div id="options"></div>
+    </div>
+    {% include 'update.html' %}
+    {% include 'jqPlot.html' %}
+    {% include 'postDist.html' %}
+    {% include 'freqDist.html' %}
 {% endblock content %}
 
 {% block extra_js %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min.js"></script>
     {# <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script> #}
-    <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
     <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
     <script src="{% static "js/featherlight.js" %}"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-    <script>
+    <script src="{% static 'js/handlebars-v3.0.0.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min.js"></script>
 
-    function catBox(json) {
-        $.each(json, function(key, value) {
-            $('#cat-box').append('<div class="cat" id="cat-'+key+'" style="background:'+value[2]+'" ><h4 style="text-align:center;">'+value[0]+'</h4></div>')
-        });        
-    };
+    {# jqPlot #}
+    <script src="{% static 'jqPlot/jquery.jqplot.min.js' %}"></script>
+    <script src="{% static 'jqPlot/plugins/jqplot.pieRenderer.min.js' %}"></script>
+    <script src="{% static 'jqPlot/plugins/jqplot.highlighter.min.js' %}"></script>
+
+
+    <script>
 
     /*CopyRight عبد النور التومي 
     http://abdennour-insat.blogspot.com/2012/09/about-me.html
@@ -87,7 +103,7 @@
             $('span.draggable').filter(function() {
                 return $(this).text() === tar;
             }).hide("puff").delay(10).queue(function(){$(this).remove();}); 
-            var data = {cue: tar, text_id: text_id, csrfmiddlewaretoken: '{{csrf_token}}'};
+            var data = {text_id: text_id, cue: tar, tag: tagType, subtag: tag, csrfmiddlewaretoken: '{{csrf_token}}'};
             $.post('{% url "api_remove_cue" %}', data, function(response) {
                 senti_main(last_open_page);
                 console.log(response);
@@ -107,23 +123,57 @@
         $('#cand_text').html(safeString(text));
     };
 
-    function patch_cat(pairs_by_cat) {
+    function escapeRegExp(str) {
+        return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+    }
+
+    function patch_cat() {
+        // var txt = cand_text.textContent;
+
         $.each(pairs_by_cat, function(key, value) {
-            // console.log(value);
             value.map(function(word) {
-                $('#cat-'+key).append('<span class="draggable" style="background:#E5E4E2;border-radius:5px;padding:5px;">'+word+'</span> ');
+                // avoid things like "><"
+                word = word.replace('>', '&gt;');
+                word = word.replace('<', '&lt;');
+
+                $('#cat-'+key).append('<span class="draggable label">'+word+'</span> ');
+                
+                var color = ref[tag][key][1],
+                    re = new RegExp("(" + escapeRegExp(word) + ")", 'g'); 
+
+                // console.log(re);
+                cand_text = cand_text.replace(re, '<span style="border-radius:5px;background:'+color+'">$1</span>');
                 return false;
             });
         });
+
+        $('#cand_text').html(cand_text);
     };
 
     function senti_main(last_open_page) {
-        var post_data = {'last_open_page': last_open_page, csrfmiddlewaretoken: "{{csrf_token}}"};
+        var post_data = {'last_open_page': last_open_page, tag: tagType, subtag: tag, csrfmiddlewaretoken: "{{csrf_token}}"};
         $.post('{% url "get_cand_text" %}', post_data, function(data) {
 
-            var json = JSON.parse(data),
-                cand_text = json['cand_text'];
-                pairs_by_cat = json['pairs_by_cat'];
+            var json = JSON.parse(data);
+            cand_text = json['cand_text'];
+
+            cand_text = cand_text.replace(/>/g, '&gt;');
+            cand_text = cand_text.replace(/</g, '&lt;');
+            
+            pairs = json['pairs'];
+
+            //
+            dic = {};
+            for (var i = 0; i < ref[tag].length; i++) {
+                dic[i] = [];
+            };
+            $.each(pairs, function(word, val) {
+                dic[parseInt(val)].push(word);
+            });
+            pairs_by_cat = dic;
+            //
+            
+
             text_id = json['text_id'];
 
             console.log(text_id);
@@ -131,30 +181,30 @@
             $('#goToPage').val('').attr('placeholder', '目前頁面： '+last_open_page);
             load_cand_text(cand_text);
 
-            if (tagType == 'Emotion') {
-                var refName = 'senti_ref'
+            {# ---------- need DRY --------------- #}
+            if (last_open_page == 1) {
+                $('.page-nav').filter(function() {
+                    return $(this).attr('data-val') == -1;
+                }).hide();
             }
-            else if (tagType == 'Stance') {
-                var refName = 'senti_ref2'
+            else if (last_open_page > 1 && last_open_page <= 899) {
+                $('.page-nav').show();
             }
+            else if (last_open_page > 899 ) {
+                $('.page-nav').filter(function() {
+                    return $(this).attr('data-val') == 1;
+                }).hide();   
+            }
+            {# ------------------------------------ #}
 
-            var post_data = {'refName': refName, csrfmiddlewaretoken: '{{csrf_token}}'};
-
-            $.post('{% url "get_ref" %}', post_data, function(json) {
-                var json = JSON.parse(json);
-                $.each(json, function(key, value) {
-                    $('.'+value[1]).css('background', value[2]);
-                });
-                $('#cat-box').empty();
-                catBox(json);
-                patch_cat(pairs_by_cat);
-            });
+            get_ref(tag);
 
             $.cookie('last_open_page', last_open_page);
             console.log(last_open_page);
 
+
             setTimeout(function() {
-                $(".draggable").draggable();
+                // $(".draggable").draggable();
                 $("#droppable").droppable({
                     drop: function (event, ui) {
                         var tar= ui.draggable.text();
@@ -170,22 +220,75 @@
         });
     };
 
-    function addSubTagBtn(tagType, subTag) {
-        $('.tag-subtype').empty();
-        for (var i=0; i< subTag.length; i++) {
-            $('.tag-subtype').append('<button class="btn btn-default" id="'+tagType+'-'+subTag[i]+'">'+subTag[i]+'</button>');
-        }        
+    function activateTagButton() {
+        $('#options .btn').click(function() {
+            var value = $(this).attr('data-val'),
+                cue = $('#output').text(),
+                data = {cue: cue, value: value, text_id: text_id, tag: tagType, subtag: tag, csrfmiddlewaretoken: '{{csrf_token}}'};
+
+            $.post('{% url "api" %}', data, function(res) {
+                if (res == 'ok') {
+                    $('.featherlight-close').click();
+
+                    // $('#cat-'+value).append('<span class="draggable label">'+cue+'</span> ');
+                    senti_main(last_open_page);
+                }
+                else {
+                    alert('系統異常，請重整頁面')
+                }
+
+            });
+        })
     };
 
-    function selectSubtype(tagType) {
-        $('[id^="'+tagType+'-"]').click(function() {
-            tag = $(this).text();
-            $.cookie('tag', tag);
-            console.log(tag);
-            $(this).addClass('active').siblings().removeClass('active');
+    function load_ref() {
+        $.get('{% url "load_ref" %}', function(data) {
+            _ref = JSON.parse(data);
+            ref = Object();
+            $.each(Object.keys(_ref), function(index, value) {
+                obj = _ref[value];
+                $.extend(ref, obj);
+
+            // tag-panel
+            var source = $('#tag-panel').html();
+            var template = Handlebars.compile(source);
+
+            $('#tag-panel-wrapper').html(template(_ref));
+
+            $('.tag-type').click(function() {
+                tagType = $(this).text();
+                $.cookie('tagType', tagType);
+                // $.removeCookie('tag');
+                console.log(tagType);
+                $(this).addClass('active').siblings().removeClass('active');
+                $('.sub-panel').each(function() {
+                    if ($(this).attr('id') == tagType) {
+                        $(this).removeClass('hide');
+                    }
+                    else {
+                        $(this).addClass('hide');
+                    }
+                });
+            });
+
+            $('.btn-subtag').click(function() {
+                tag = $(this).text();
+                $.cookie('tag', tag);
+                console.log(tag);
+                // $(this).addClass('active').siblings().removeClass('active');
+                $(this).addClass('active');
+                $('.btn-subtag').not(this).removeClass('active');
+                senti_main(last_open_page);
+            }); 
+
+
+            });
         });
+
     };
 
+
+    load_ref();
 
     last_open_page = parseInt($.cookie('last_open_page'));
     text_sel = ''
@@ -199,6 +302,7 @@
     console.log('last_open_page is: '+last_open_page);
 
     $('.page-nav').click(function() {
+        $('#cat-box').css('top', 0);
         var val = $(this).attr('data-val');
         last_open_page += parseInt(val);
         senti_main(last_open_page);
@@ -208,34 +312,17 @@
    $('#cand_text').mouseup(function (e){
        text_sel = getSelectionText()
        text_sel = $.trim(text_sel)
-       var max_len = 6
+       var max_len = 10;
        if (text_sel != '') {
            if (text_sel.length > max_len ) {
                alert('選擇的字串長度不可以超過'+max_len);
                }
            else {
-                    if (tagType == 'Emotion') {
-                        if (tag == 'Emo' || tag == 'Mood') {
-                            $("#output").text(text_sel);
-                            $('#tagger').click();
-                            $('input[name="optradio"]:checked').prop('checked', false);
-                        }
-                        else if (tag == 'Feeling' || tag == 'Attitude' || tag == 'Temperament' || tag == 'Personality') {
-                            $("#output2").text(text_sel);
-                            $('#tagger2').click();
-                            $('input[name="optradio"]:checked').prop('checked', false);
-                        }
-                        else if (tag == 'Insult') {
-                            $("#output3").text(text_sel);
-                            $('#tagger3').click();
-                            $('input[name="optradio"]:checked').prop('checked', false);
-                        }
-                    }
-                   else if (tagType == 'Stance') {
-                        $("#output4").text(text_sel);
-                        $('#tagger4').click();
-                        $('input[name="optradio"]:checked').prop('checked', false);
-                   }
+
+                $("#output").text(text_sel);
+                $('#tagger').click();
+                $('input[name="optradio"]:checked').prop('checked', false);
+
                }
            }
       })
@@ -249,84 +336,147 @@
 
     });
 
-    $('#senti_opts .btn').click(function() {
-        var value = $(this).attr('data-val'),
-            cue = $('#output').text(),
-            data = {cue: cue, value: value, text_id: text_id, csrfmiddlewaretoken: '{{csrf_token}}'};
-        $.post('{% url "api" %}', data, function() {
-            $('.featherlight-close').click();
-            senti_main(last_open_page);
-        });
-    })
-
     $('#goToPage').keydown(function (e){
         if(e.keyCode == 13){
-            last_open_page = parseInt($(this).val());
-            senti_main(last_open_page);
+            {# --------------------need DRY ---------------- #}
+            if ( $(this).val() < 1 || $(this).val() > 900 ) {
+                alert('請輸入 0 ~ 900')
+            }
+            else {
+                last_open_page = parseInt($(this).val());
+                senti_main(last_open_page);                
+            }
+            {# --------------------------------------------- #}
+
         }
     });
-
+    {# only allow integer input #}
     $("#goToPage").keyup(function() {
         $("#goToPage").val(this.value.match(/[0-9]*/));
     });
 
-    $('.tag-type').click(function() {
-        tagType = $(this).text();
-        $.cookie('tagType', tagType);
-        $.removeCookie('tag');
-        console.log(tagType);
-        $(this).addClass('active').siblings().removeClass('active');
-        $('.sub-panel').removeClass('hide');
-        if (tagType === 'Emotion') {
-            var subTag = 'Emo,Mood,Feeling,Attitude,Temperament,Personality,Insult'.split(',');
-            addSubTagBtn(tagType, subTag);
-            senti_main(last_open_page);
-        }
-        else if (tagType === 'Stance') {
-            $('.sub-panel').addClass('hide');
-            senti_main(last_open_page);
-            // var subTag = '發話者,Speech event,立場詞,目標詞,明顯主觀,不明顯主觀,元話語,論辯cue'.split(',');
-            // addSubTagBtn(tagType, subTag);
-        };
-        selectSubtype(tagType);
-    });
-
-
-
 
     $(function() {
-        var init_page = last_open_page-1
+    //     var init_page = last_open_page-1
         
         tagType = $.cookie('tagType');
         tag = $.cookie('tag');
 
-        // senti_main(last_open_page);
+        if (tagType === undefined) {
+            tagType = $('.tag-type').first().text();
+        }
+        if (tag === undefined) {
+            tag = $(".btn-subtag").first().text();
+        }
 
-        $('.tag-type').filter(function() {
-            return $(this).text() === tagType;
-        }).click();
-        $('#'+tagType+'-'+tag).click();
+    //     senti_main(last_open_page);
+        setTimeout(function() {
+            $('.tag-type').filter(function() {
+                return $(this).text() === tagType;
+            }).click();
+
+            $('.btn-subtag').filter(function() {
+                return $(this).text() === tag;
+            }).click();
+            catBoxInitTop = $('._main').offset().top;
+        }, 500);
+
+
+
+    });
+
+    $("#font-slider").slider({
+        value: 14,
+        min: 6,
+        max: 36,
+        step: 1,
+        slide: function (event, ui) {
+            $('#cand_text').css('font-size', ui.value);
+            $('#cat-box').css('top', 0);
+        }
+    });
+
+    {# make cat-box always visible: http://stackoverflow.com/a/27630297/1105489 #}    
+
+
+    $(window).on('scroll', function() {
+
+        var windowCurrTop = $(window).scrollTop(),
+            // docBottom = $(document).height(),
+            catBoxCurrTop = $('#cat-box').offset().top;
+            // catBoxCurrBotttom = catBoxCurrTop + $('#cat-box').height();
+
+        // console.log(catBoxCurrTop, windowCurrTop, catBoxCurrBotttom, docBottom);
+
+        if (catBoxCurrTop != windowCurrTop) {
+            if (windowCurrTop > catBoxInitTop ) {
+                console.log(catBoxCurrTop, catBoxInitTop, windowCurrTop);
+                setTimeout(function() {
+                    $('#cat-box').offset({'top': windowCurrTop});
+                }, 200);
+            }
+
+        }
+
     });
 
 
+    $('#cat-box').draggable({
+        axis: "y",
+        containment: '._main'
+    });
+
+    $(".modal-wide").on("show.bs.modal", function() {
+        var height = $(window).height() - 200;
+        $(this).find(".modal-body").css("max-height", height);
+    });
+
     </script>
+    {% include 'ref.html' %}
+
+
+
 {% endblock extra_js %}
 
 {% block extra_css %}
     <style>
+    #font-slider {
+        float: right;
+        width: 80%;
+    }
+    #font-slider.ui-slider-horizontal {
+        height: 1em;
+    }
+
+    .ui-slider .ui-slider-handle {
+        width: 1.4em !important;
+        height: 1.4em !important;
+    }
+
     .lightbox {
         display: none;
     }
-    .row {padding: 20px;}
-    a:active, a:visited, a:link {color:inherit; text-decoration:none}
-
-    .draggable {cursor:move; font-size:150%;}
-    #cand_text {line-height: 200%;}
-    #joke {color:red;}
-    #draggable {
-        background: #78BA91;
-        display:inline-block;
+    .row {
+        padding: 20px;
     }
+    a:active, a:visited, a:link {
+        color:inherit; text-decoration:none
+    }
+
+    .draggable {
+        cursor: pointer; 
+        font-size:130%;
+        background:#E5E4E2;
+        color: black;
+        line-height: 2;
+        border-radius:5px;
+        /*padding:5px;*/
+    }
+
+    #cand_text {
+        line-height: 200%;
+    }
+
     .dp {
         vertical-align: middle;
         display: inline-block;
@@ -347,15 +497,27 @@
         padding: 10px;
     }
 
+    #cat-box {
+        cursor: move;
+    }
+
     .highlight {
         -moz-border-radius: 5px;
         border-radius: 5px;
         padding: 1px;
     }
 
+    .modal.modal-wide .modal-dialog {
+      width: 90%;
+    }
+    .modal-wide .modal-body {
+      overflow-y: auto;
+      min-height: 100px;
+    }
     </style>
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css"></style>
     <link rel="stylesheet" type="text/css" href="{% static "css/featherlight.css" %}">
+    <link rel="stylesheet" type="text/css" href="{% static "jqPlot/jquery.jqplot.min.css" %}">
 {% endblock extra_css %}
 
 {% comment %}

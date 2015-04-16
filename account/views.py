@@ -1,33 +1,44 @@
 # -*-coding:utf-8-*-
-from django.shortcuts import render_to_response, redirect
-from django.template import RequestContext
-from django.core.urlresolvers import reverse
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm
+from django.http import HttpResponse
+from django.core.exceptions import PermissionDenied
+from django.contrib.auth.models import User
 
 
 def signin(request):
     if request.method == 'POST':
-        auth_form = AuthenticationForm(data=request.POST)
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(username=username, password=password)
-        if auth_form.is_valid():
-            if user is not None:
-                if user.is_active:
-                    login(request, user)
-                    return redirect(reverse('index'))
-                else:
-                    pass
-                    # Return a 'inactive user' error message
+        if user:
+            if user.is_active:
+                login(request, user)
+                return HttpResponse('OK')
             else:
-                pass
-                # Return a 'disabled account' error message
+                return HttpResponse('此帳號尚未驗證')
+        else:
+            return HttpResponse('帳號或密碼錯誤')
     else:
-        auth_form = AuthenticationForm()
-    return render_to_response('signin.html', {'auth_form': auth_form}, context_instance=RequestContext(request))
+        raise PermissionDenied()
 
 
 def signout(request):
-    logout(request)
-    return redirect(reverse('index'))
+    if request.method == 'POST':
+        logout(request)
+        return HttpResponse('OK')
+    else:
+        raise PermissionDenied()
+
+
+def register(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        exist = User.objects.filter(username=username)
+        if exist:
+            return HttpResponse('此帳號已被註冊')
+        User.objects.create_user(username=username, password=password)
+        return HttpResponse('OK')
+
+    else:
+        raise PermissionDenied()

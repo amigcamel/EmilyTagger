@@ -1,0 +1,78 @@
+<div class="modal fade" id="postDist">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">標記狀態</h4>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>篇數</th>
+                            <th>來源</th>
+                            <th>分類</th>
+                            <th>已標記數量</th>
+                            <th>標記詞數量</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-postDist"></tbody>
+                </table>
+                <div class="alert alert-info" role="alert">
+                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                    已完成標記之篇數： <span id="taggedPostNum"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% verbatim %}
+<script id="hb_distPost" type="text/x-handlebars-template">
+    {{#each objects}}
+    <tr>
+        <td>{{this.[0]}}</td>
+        <td>{{this.[1]}}</td>
+        <td>{{this.[2]}}</td>
+        <td>{{this.[3]}}</td>
+        <td>{{this.[4]}}</td>
+    </tr>
+    {{/each}}
+</script>
+{% endverbatim %}
+
+
+<script type="text/javascript">
+    setTimeout(function() {
+        $('#postDist').on('shown.bs.modal', function (e) {
+            var target = $('#postDist > div.modal-dialog > div > div.modal-body');
+            var spinner = new Spinner().spin();
+            target.append(spinner.el);
+
+            var url = '{% url "get_post_dist" "__________" %}'.replace('__________', tag);
+            $.get(url, function(data) {
+                data = JSON.parse(data);
+                spinner.stop();
+                dpSource   = $("#hb_distPost").html();
+                dpTemplate = Handlebars.compile(dpSource);
+                dpHtml = dpTemplate({objects: data});
+                $('#tbody-postDist').empty();
+                $('#tbody-postDist').html(dpHtml);
+
+                var con = []
+                $('#tbody-postDist tr').each(function() {
+                    con.push(parseInt($(this).find('td:nth-last-child(2)').text()));
+                });
+                var sum = _.reduce(con, function(memo, num){ return memo + num; }, 0);
+                $('#taggedPostNum').text(sum);
+
+            })
+        });
+        $("#postDist").on('hidden.bs.modal', function () {
+            $(this).data('bs.modal', null);
+            // $('#tbody-postDist').empty();
+            $('#taggedPostNum').empty();
+        });
+    }, 1000);
+
+</script>

@@ -1,101 +1,63 @@
 # -*-coding:utf-8-*-
 from django.shortcuts import render_to_response
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.template import RequestContext
-from django.core.urlresolvers import reverse
-# from .forms import SentiTagForm
-from django.http import JsonResponse
-from .mongo import *
-from .ref import senti_ref, senti_ref2
+from django.conf import settings
+from rlite_api import update, read_pairs, remove_cue
 from urllib import unquote
 import re
-from misc.templatetags.senti_tag import txt_with_color
 import json
+import sqlite3
+from .func import gen_tag_dist
+
+
+import logging
+logger = logging.getLogger(__name__)
+
+
+DB_PATH = settings.DATABASES['default']['NAME']
 
 
 def main(request):
     return render_to_response('senti_main.html', context_instance=RequestContext(request))
-    # if current_page is None:
-    #     current_page = request.COOKIES.get('last_open_page', 1)
-
-    # if int(current_page) < 1:
-    #     return HttpResponseRedirect(reverse('index'))
-    # elif int(current_page) >= 1 and int(current_page) <= 499:
-    #     db_name = 'senti_news'
-    # elif int(current_page) > 499 and int(current_page) <= 899:
-    #     db_name = 'senti_ptt'
-    # elif int(current_page) > 899:
-    #     return HttpResponseRedirect(reverse('index'))
-
-    # cat, url = find_next_id(int(current_page), db_name)
-    # dic = dict()
-    # dic['current_page'] = int(current_page) + 1
-
-    # doc = c[db_name][cat].find({'_id': url}, {'content': 1}).next()
-    # dic['text'] = doc['content']
-    # text_id = dic['text_id'] = doc['_id']
-    # dic['senti_ref'] = senti_ref
-    # dic['pairs'] = read_pairs(text_id, request.user.username)
-    # dic['pairs_by_cat'] = read_by_cat(text_id, request.user.username)
-    # res = render_to_response('senti_main.html', dic, context_instance=RequestContext(request))
-    # # res.set_cookie('last_open_page', current_page)
-    # return res
-
-
-def get_ref(request):
-    res = request_parser(request)
-    ref_name = res['refName']
-    if ref_name == 'senti_ref':
-        ref = json.dumps(senti_ref)
-    elif ref_name == 'senti_ref2':
-        ref = json.dumps(senti_ref2)
-    # return JsonResponse(senti_ref)
-    print 'ref_name: %s' % ref_name
-    return HttpResponse(ref)
 
 
 def get_cand_text(request):
     res = request_parser(request)
     page_num = res['last_open_page']
+    logger.debug('page_num: %s' % str(page_num))
+    tag = res['tag']
+    subtag = res['subtag']
 
-    if int(page_num) < 1:
-        return HttpResponseRedirect(reverse('index'))
-    elif int(page_num) >= 1 and int(page_num) <= 499:
-        db_name = 'senti_news'
-    elif int(page_num) > 499 and int(page_num) <= 899:
-        db_name = 'senti_ptt'
-    elif int(page_num) > 899:
-        return HttpResponseRedirect(reverse('index'))
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute("SELECT url, post FROM emilytagger_posts WHERE id=?", (page_num, ))
+    text_id, cand_text = c.fetchall()[0]
+    conn.close()
 
-    cat, url = find_next_id(int(page_num), db_name)
+    pairs = read_pairs(text_id, tag, subtag, request.user.username)
 
-    doc = c[db_name][cat].find({'_id': url}, {'content': 1}).next()
-    cand_text = doc['content']
-    text_id = doc['_id']
-    pairs_by_cat = read_by_cat(text_id, request.user.username)
-    pairs = read_pairs(text_id, request.user.username)
-    cand_text = txt_with_color(cand_text, pairs)
-    fin = {'pairs_by_cat': pairs_by_cat, 'cand_text': cand_text, 'text_id': text_id}
-    # return JsonResponse(fin)
+    fin = {'pairs': pairs, 'cand_text': cand_text, 'text_id': text_id}
     return HttpResponse(json.dumps(fin))
 
 
 def api_remove_cue(request):
     res = request_parser(request)
-    text_id = res['text_id']
-    cue = res['cue']
-    username = request.user.username
-    remove_cue(text_id, cue, username)
+    user = request.user.username
+    res['user'] = user
+    res = remove_cue(**res)
     return HttpResponse('ok')
 
 
 def api(request):
     res = request_parser(request)
-    cue = res['cue']
-    val = int(res['value'])
-    text_id = res['text_id']
-    update(text_id=text_id, cue=cue, tag=val, user=request.user.username)
-    return HttpResponse('ok')
+    user = request.user.username
+    res['user'] = user
+    res = update(**res)
+    if res:
+        return HttpResponse('ok')
+    else:
+        raise
 
 
 def request_parser(request):
@@ -105,4 +67,105 @@ def request_parser(request):
         res = re.search('(.+)=(.*)', r)
         key, val = res.group(1), res.group(2)
         req_dic[key] = unquote(val)
+    if 'csrfmiddlewaretoken' in req_dic:
+        req_dic.pop('csrfmiddlewaretoken')
     return req_dic
+
+
+def load_ref(request):
+    with open(settings.TAG_PATH) as f:
+        ref = f.read()
+    return HttpResponse(ref)
+
+
+def draw_dist_pie(request, subtag):
+    res = gen_tag_dist(request.user.username, subtag)
+    return HttpResponse(json.dumps(res, ensure_ascii=False))
+
+
+def get_post_dist(request, subtag):
+    from .rlite_api import DB_Conn
+    from itertools import groupby, chain
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('select id, source, senti, url from emilytagger_posts')
+    res = c.fetchall()
+    res = [list(i) for i in res]
+
+    dbconn = DB_Conn(request.user.username)
+
+    con = []
+    tag_res_con = []
+    for id, source, senti, url in res:
+        uid = '%s__%s' % (url, subtag)
+        tag_res = dbconn.read(uid)
+        if tag_res:
+            con.append(1)
+        else:
+            con.append(0)
+        tag_res_con.append(tag_res)
+
+    tmp = zip(*res)
+    tmp.append(con)
+    tmp.append(tag_res_con)
+    res = map(list, zip(*tmp))
+
+    groups = []
+    uniquekeys = []
+    for k, g in groupby(res, lambda x: x[2]):
+        groups.append(list(g))
+        uniquekeys.append(k)
+    dist = [('%d~%d' % (i[0][0], i[-1][0]), i[0][1], i[0][2], sum(ii[4] for ii in i), len(dict(chain.from_iterable(ii[5].items() for ii in i)))) for i in groups]
+    return HttpResponse(json.dumps(dist))
+
+
+def get_freq_dist(request, subtag='Emotion'):
+    from .rlite_api import DB_Conn
+    # from nltk import FreqDist
+    from collections import Counter
+
+    dist = json.loads(get_post_dist(request, subtag).content)
+
+    post_range_con = []
+    for post_range, source, senti, tagged_num, type_num in dist:
+        post_start, post_end = post_range.split('~')
+        post_range = range(int(post_start), int(post_end)+1)
+        post_range_con.append(post_range)
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('select id, source, senti, url from emilytagger_posts')
+    res = c.fetchall()
+    res = [list(i) for i in res]
+
+    dbconn = DB_Conn(request.user.username)
+    fdist_lst = []
+    words_con = []
+    for post_range in post_range_con:
+        words = []
+        for p in post_range:
+            uid = '%s__%s' % (res[p-1][3], subtag)
+            kv = dbconn.read(uid)
+            words += kv.keys()
+            words_con += kv.keys()
+        words = Counter(words)
+        words = words.items()
+        words.sort(key=lambda x: x[1], reverse=True)
+        words = [(i[0], i[1]) for i in words if i[1] > 1]
+        fdist_lst.append(words)
+
+    all_words = Counter(words_con)
+    all_words = all_words.items()
+    all_words.sort(key=lambda x: x[1], reverse=True)
+    all_words = [(i[0], i[1]) for i in all_words if i[1] > 1]
+    fdist_lst.append(all_words)
+
+    tar = ['%s-%s' % (i[1], i[2]) for i in dist]
+    tar.append('all')
+
+    return HttpResponse(json.dumps(zip(tar, fdist_lst), ensure_ascii=False))
+
+
+if __name__ == '__main__':
+    from test import FakeRequest
+    request = FakeRequest()
