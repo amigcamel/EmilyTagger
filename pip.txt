@@ -7,7 +7,6 @@ ipython==2.4.1
 persistent==4.0.9
 six==1.9.0
 transaction==1.4.3
-unqlite==0.1.9
 zc.lockfile==1.1.0
 ZConfig==3.0.4
 zdaemon==4.0.1
