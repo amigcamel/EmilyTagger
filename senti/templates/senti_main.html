@@ -142,7 +142,7 @@
                     re = new RegExp("(" + escapeRegExp(word) + ")", 'g'); 
 
                 // console.log(re);
-                cand_text = cand_text.replace(re, '<span style="border-radius:5px;background:'+color+'">$1</span>');
+                cand_text = cand_text.replace(re, '<span class="hlw" style="border-radius:5px;background:'+color+'">$1</span>');
                 return false;
             });
         });
@@ -431,6 +431,18 @@
         $(this).find(".modal-body").css("max-height", height);
     });
 
+
+    $("._main").on('mouseenter', '.hlw', function() {
+        var cue = $(this).text();
+        $('.draggable.label:contains("'+cue+'")').css('opacity', '1').css('z-index', '444').css('position', 'relative');
+        $('.draggable.label:not(:contains("'+cue+'"))').css('opacity', '0.3');
+    });
+
+    $("._main").on('mouseleave', '.hlw', function() {
+        $('.draggable.label').css('opacity', '1');
+        $('#cat-box').css('opacity', '1');
+    });
+
     </script>
     {% include 'ref.html' %}
 
@@ -460,7 +472,8 @@
         padding: 20px;
     }
     a:active, a:visited, a:link {
-        color:inherit; text-decoration:none
+        color:inherit; 
+        text-decoration:none
     }
 
     .draggable {
@@ -499,6 +512,7 @@
 
     #cat-box {
         cursor: move;
+        zoom: 1;
     }
 
     .highlight {
@@ -514,6 +528,23 @@
       overflow-y: auto;
       min-height: 100px;
     }
+
+    .cat-zoom {
+        position: absolute;
+        top: 0;
+        right: 0;
+
+    }
+    .cat-zoom button {
+        background: transparent;
+        border: 0;
+    }
+
+    .featherlight {
+        position: relative;
+        z-index: 99999 !important;
+    }
+
     </style>
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css"></style>
     <link rel="stylesheet" type="text/css" href="{% static "css/featherlight.css" %}">

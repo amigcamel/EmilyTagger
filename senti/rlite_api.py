@@ -3,7 +3,8 @@ import hirlite
 import json
 from django.conf import settings
 from os.path import join
-# import traceback
+from itertools import chain
+import traceback
 import logging
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,12 @@ class DB_Conn:
         logger.debug('rlite: Connection established')
 
     def read(self, uid):
-        res = self.db.command('get', uid.encode('utf-8'))
+        try:
+            res = self.db.command('get', uid)
+        except UnicodeError:
+            logger.warning(traceback.format_exc())
+            res = self.db.command('get', uid.encode('utf-8'))
+
         if res:
             res = json.loads(res)
         else:
@@ -62,6 +68,17 @@ class DB_Conn:
             logger.debug('cursor: ' + key)
 
         return con
+
+    def collect_tagged_words(self, subtag, with_val=False):
+        items = self.collect(subtag)
+        wlst = (i[1] for i in items)
+        if with_val:
+            wlst = (i.items() for i in wlst)
+        else:
+            wlst = (i.keys() for i in wlst)
+        wlst = chain.from_iterable(wlst)
+        words = list(set(wlst))
+        return words
 
 
 def update(cue, value, text_id, tag, subtag, user):

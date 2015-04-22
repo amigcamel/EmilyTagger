@@ -14,6 +14,13 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
+import logging
+import coloredlogs
+coloredlogs.ColoredStreamHandler.default_severity_to_style['INFO'] = {'underline': True}
+coloredlogs.ColoredStreamHandler.default_severity_to_style['WARNING'] = {'inverse': True}
+coloredlogs.install(level=logging.DEBUG)
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
@@ -75,7 +82,7 @@ DATABASES = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Taipei'
 
 USE_I18N = True
 
@@ -114,7 +121,7 @@ LOGGING = {
     'loggers': {
         'django.request': {
             'handlers': ['console'],
-            'propagate': True,
+            'propagate': False,
             'level': 'ERROR',
         }
     },

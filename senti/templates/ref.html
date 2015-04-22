@@ -53,8 +53,19 @@
         $('#options').html(optHtml);
         activateTagButton();
         patch_cat();
+
+        var catZoom = '<div class="cat-zoom"><button class="btn btn-default" data-scale="0.1"><span class="glyphicon glyphicon-zoom-in"></span></button><button class="btn btn-default" data-scale="-0.1"><span class="glyphicon glyphicon-zoom-out"></span></button></div>'
+
+        $('.cat').first().append(catZoom);
         
     };
 
+    $('#cat-box').on('click', '.cat-zoom button', function() {
+        var scale = parseFloat($(this).attr('data-scale')),
+            curScale = parseFloat($('#cat-box').css('zoom'));
+
+        $('#cat-box').css('zoom', curScale+scale);
+        $('.draggable').css('z-index', -9999);
+    });
     </script>
 {% endverbatim %}
