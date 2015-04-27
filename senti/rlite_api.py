@@ -21,6 +21,7 @@ class DB_Conn:
         logger.debug('rlite: Connection established')
 
     def read(self, uid):
+        '''read tagged words by uid'''
         try:
             res = self.db.command('get', uid)
         except UnicodeError:
