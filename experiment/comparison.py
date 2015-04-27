@@ -15,11 +15,12 @@ import logging
 
 
 # logging settings
-logger = logging.getLogger(__name__)
-LOG_PATH = LOG_PATH % 'span_error'
-fh = logging.FileHandler(LOG_PATH, mode='w')
+logger_name = 'span_error'
+logger2 = logging.getLogger(logger_name)
+LOG_PATH = LOG_PATH % logger_name
+fh = logging.FileHandler(LOG_PATH)
 fh.setLevel(logging.ERROR)
-logger.addHandler(fh)
+logger2.addHandler(fh)
 
 
 def _txt_to_list(path, spliter='\r\n'):
@@ -83,7 +84,7 @@ def extract_sentence(post, span=10):
     global pos
     global neg
     pid = multiprocessing.current_process().pid
-    logger.debug(pid)
+    logger2.debug(pid)
     ovl = set(target_emolex) & set(post)
     post = numpy.array(post)
     post_len = len(post)
@@ -96,8 +97,8 @@ def extract_sentence(post, span=10):
             tar_word = post[idx]
             right_bound = idx + span
             if right_bound >= post_len:
-                logger.warning('right_bound smaller than %d' % span)
-                logger.error('%s' % tar_word)
+                logger2.warning('right_bound smaller than %d' % span)
+                logger2.error('%s' % tar_word)
                 break
             pos_cnt, neg_cnt = 0, 0
             while True:
@@ -114,7 +115,7 @@ def extract_sentence(post, span=10):
                     idx += 1
                 else:
                     break
-            logger.debug('%s -- %d -- %d' % (tar_word, pos_cnt, neg_cnt))
+            logger2.debug('%s -- %d -- %d' % (tar_word, pos_cnt, neg_cnt))
             if pos_cnt > neg_cnt:
                 res = 'pos'
             elif pos_cnt < neg_cnt:
@@ -136,7 +137,7 @@ def calc_polarity(lsts):
         val = (pos*1.0 + neg*-1.0) / freq
         # dic[k] = val
         dic[k] = '%.5f' % val
-        logger.debug('%s | %f - %f - %f - %f' % (k, pos, neg, freq, val))
+        logger2.debug('%s | %f - %f - %f - %f' % (k, pos, neg, freq, val))
     return dic
 
 

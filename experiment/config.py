@@ -2,7 +2,6 @@
 from os.path import abspath, dirname, join
 from django.conf import settings
 
-
 CUR_PATH = dirname(abspath(__name__))
 GFDIST_PATH = join(CUR_PATH, 'gfdist.rld')
 POSTS_SEG_PATH = join(CUR_PATH, 'posts_seg.rld')

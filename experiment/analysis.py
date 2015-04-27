@@ -1,4 +1,7 @@
 # -*-coding:utf-8 -*-
+import sys
+sys.path.append('..')
+
 import sqlite3
 from senti.rlite_api import DB_Conn
 from itertools import chain, groupby
@@ -11,9 +14,10 @@ import logging
 
 
 # logging settings
-logger = logging.getLogger(__name__)
-LOG_PATH = LOG_PATH % 'segmetation_error'
-fh = logging.FileHandler(LOG_PATH, mode='w')
+logger_name = 'segmetation_error'
+logger = logging.getLogger(logger_name)
+LOG_PATH = LOG_PATH % logger_name
+fh = logging.FileHandler(LOG_PATH)
 fh.setLevel(logging.ERROR)
 logger.addHandler(fh)
 
