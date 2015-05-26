@@ -130,5 +130,6 @@ LOGGING = {
 
 # UNQLITE_DB_PATH = os.path.join(BASE_DIR, 'dbs')
 RLITE_DB_PATH = os.path.join(BASE_DIR, 'dbs')
+USER_DB_PATH = os.path.join(BASE_DIR, 'user_dbs', '%s.db')
 
 TAG_PATH = os.path.join(BASE_DIR, 'senti', 'ref.json')

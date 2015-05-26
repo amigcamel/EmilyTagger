@@ -5,7 +5,7 @@ class FakeRequest:
 
     def __init__(self):
         self.user = self.FakeUser()
-        self.user.username = 'emily.lulala@gmail.com'
+        self.user.username = 'amigcamel@gmail.com'
 
 
 if __name__ == '__main__':

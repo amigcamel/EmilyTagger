@@ -4,7 +4,7 @@
 <html>
 
 <head>
-    <title>Emily</title>
+    <title>LOPE Tagger</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <!-- Bootstrap -->
@@ -51,18 +51,19 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a href="{% url 'senti_main' %}" class="navbar-brand">Emily Tagger</a>
+                <a href="{% url 'senti_main' %}" class="navbar-brand">LOPE Tagger</a>
             </div>
             <nav class="collapse navbar-collapse bs-navbar-collapse">
                 <ul class="nav navbar-nav">
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     {% if user.is_authenticated %}
-                    <li><a href="#">{{user}}</a>
-                        <li><a href="#" id="signout">登出</a> {% else %}
-                            <li><a href="#signup" data-toggle="modal" data-target="#accountModal" data-intro="由此可以快速註冊一個新帳號或登入">登入/註冊</a>
-                            </li>
-                            {% endif %}
+                        <li><a href="#" data-toggle="modal" data-target="#uploadText">{{user}}</a></li>
+                        <li><a href="#" id="signout">登出</a></li>
+                        <li><a href="#" onClick="introJs().start()">操作說明</a></li>
+                    {% else %}
+                        <li><a href="#signup" data-toggle="modal" data-target="#accountModal" data-intro="由此可以快速註冊一個新帳號或登入">登入/註冊</a></li>
+                    {% endif %}
                 </ul>
             </nav>
         </div>
@@ -71,20 +72,16 @@
     {% block header %}{% endblock header %}
     </h1>
     <div class="container">
-        <div style="text-align:center;padding-bottom:20px;">
-            <button id='btn-intro' class="btn btn-warning btn-lg" onClick="introJs().start()">操作說明</button>
-            <a id='btn-updateLog' class="btn btn-info btn-lg" data-featherlight='#updateLog'>查看更新</a>
-        </div>
         {% block content %} {% endblock content %}
     </div>
 
     {% include 'account.html' %}
+    {% include 'upload_text.html' %}
 
     <footer>
         <div class="container">
             <hr class="prettyline">
             <a href="http://lopen.linguistics.ntu.edu.tw/" target="_blank"><img src="http://lopen.linguistics.ntu.edu.tw/assets/icon/logo.jpg" width="30" height="30" alt="LOPE"> Graduate Institute of Linguistics, National Taiwan University, 2015</a>
-            <span>, made by<a href="http://ajiblog.herokuapp.com/" target="_blank"> 阿吉</a></span>
         </div>
 
     </footer>

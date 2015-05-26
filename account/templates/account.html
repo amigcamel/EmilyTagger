@@ -1,111 +1,147 @@
-<div class="modal fade bs-modal-sm" id="accountModal" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-        <br>
-        <div class="bs-example bs-example-tabs">
-            <ul id="myTab" class="nav nav-tabs">
-              <li class="active"><a href="#signin" data-toggle="tab">登入</a></li>
-              <li class=""><a href="#signup" data-toggle="tab">註冊</a></li>
-              <li class=""><a href="#why" data-toggle="tab">為什麼要註冊?</a></li>
-            </ul>
-        </div>
-      <div class="modal-body">
-        <div id="myTabContent" class="tab-content">
-        <div class="tab-pane fade in" id="why">
-        <p>註冊讓您有個人資料儲存空間，以及可自訂標記</p>
-        </div>
-        <div class="tab-pane fade active in" id="signin">
-            <form class="form-horizontal">
-            <fieldset>
-            <!-- Sign In Form -->
-            <!-- Text input-->
-
-            <div class="control-group">
-              <label class="control-label" for="userid">Email:</label>
-              <div class="controls">
-                <input required="" id="userid" name="userid" type="text" class="form-control" placeholder="lope@ntu.edu.tw" class="input-medium" required="">
-              </div>
-            </div>
-
-            <!-- Password input-->
-            <div class="control-group">
-              <label class="control-label" for="passwordinput">密碼:</label>
-              <div class="controls">
-                <input required="" id="passwordinput" name="passwordinput" class="form-control" type="password" placeholder="********" class="input-medium">
-              </div>
-            </div>
-            
-            <!-- Button -->
-            <div class="control-group">
-              <label class="control-label" for="signin"></label>
-              <div class="controls">
-                <button id="btn-signin" name="signin" class="btn btn-success">登入</button>
-              </div>
-            </div>
-            <br>
-            <div class="alert alert-danger hide" role="alert">
-              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-              <span class="sr-only">Error:</span>
-              <span class='loginMsg'></span>
-            </div>
-            </fieldset>
-            </form>
-
-        </div>
-        <div class="tab-pane fade" id="signup">
-            <form class="form-horizontal">
-            <fieldset>
-            <!-- Sign Up Form -->
-            <!-- Text input-->
-            <div class="control-group">
-              <label class="control-label" for="Email">Email:</label>
-              <div class="controls">
-                <input id="Email" name="Email" class="form-control" type="text" placeholder="lope@ntu.edu.tw" class="input-large" required="">
-              </div>
-            </div>
-            
-            <!-- Password input-->
-            <div class="control-group">
-              <label class="control-label" for="password">密碼:</label>
-              <div class="controls">
-                <input id="password" name="password" class="form-control" type="password" placeholder="********" class="input-large" required="">
-                {# <em>1-8 Characters</em> #}
-              </div>
-            </div>
-            
-            <!-- Text input-->
-            <div class="control-group">
-              <label class="control-label" for="reenterpassword">密碼（再次輸入）:</label>
-              <div class="controls">
-                <input id="reenterpassword" class="form-control" name="reenterpassword" type="password" placeholder="********" class="input-large" required="">
-              </div>
-            </div>
-            
-            <!-- Button -->
-            <div class="control-group">
-              <label class="control-label" for="btn-register"></label>
-              <div class="controls">
-                <button id="btn-register" class="btn btn-success">註冊</button>
-              </div>
-            </div>
+<div class="modal fade bs-modal-sm" id="accountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
             <br>
 
-            <div class="alert alert-danger hide" role="alert">
-              <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
-              <span class="sr-only">Error:</span>
-              <span class='loginMsg'></span>
+            <div class="bs-example bs-example-tabs">
+                <ul class="nav nav-tabs" id="myTab">
+                    <li class="active">
+                        <a data-toggle="tab" href="#signin">登入</a>
+                    </li>
+
+                    <li class="">
+                        <a data-toggle="tab" href="#signup">註冊</a>
+                    </li>
+
+                    <li class="">
+                        <a data-toggle="tab" href="#why">為什麼要註冊?</a>
+                    </li>
+                </ul>
             </div>
 
-            </fieldset>
-            </form>
-      </div>
+            <div class="modal-body">
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade in" id="why">
+                        <p>註冊讓您有個人資料儲存空間，以及可自訂標記</p>
+                    </div>
+
+                    <div class="tab-pane fade active in" id="signin">
+                        <form class="form-horizontal">
+                            <fieldset>
+                                <!-- Sign In Form -->
+                                <!-- Text input-->
+
+                                <div class="control-group">
+                                    <label class="control-label" for=
+                                    "userid">Email:</label>
+
+                                    <div class="controls">
+                                        <input class="input-medium" id="userid"
+                                        name="userid" placeholder=
+                                        "lope@ntu.edu.tw" required="" type=
+                                        "text">
+                                    </div>
+                                </div><!-- Password input-->
+
+                                <div class="control-group">
+                                    <label class="control-label" for=
+                                    "passwordinput">密碼:</label>
+
+                                    <div class="controls">
+                                        <input class="input-medium" id=
+                                        "passwordinput" name="passwordinput"
+                                        placeholder="********" required=""
+                                        type="password">
+                                    </div>
+                                </div><!-- Button -->
+
+                                <div class="control-group">
+                                    <label class="control-label" for="signin"></label>
+
+                                    <div class="controls">
+                                        <button class="btn btn-success" id=
+                                        "btn-signin" name="signin">登入</button>
+                                    </div>
+                                </div><br>
+
+                                <div class="alert alert-danger hide">
+                                    <span class=
+                                    "glyphicon glyphicon-exclamation-sign"></span>
+                                    <span class="sr-only">Error:</span>
+                                    <span class='loginMsg'></span>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+
+                    <div class="tab-pane fade" id="signup">
+                        <form class="form-horizontal">
+                            <fieldset>
+                                <!-- Sign Up Form -->
+                                <!-- Text input-->
+
+                                <div class="control-group">
+                                    <label class="control-label" for=
+                                    "Email">Email:</label>
+
+                                    <div class="controls">
+                                        <input class="input-large" id="Email"
+                                        name="Email" placeholder=
+                                        "lope@ntu.edu.tw" required="" type=
+                                        "text">
+                                    </div>
+                                </div><!-- Password input-->
+
+                                <div class="control-group">
+                                    <label class="control-label" for=
+                                    "password">密碼:</label>
+
+                                    <div class="controls">
+                                        <input class="input-large" id=
+                                        "password" name="password" placeholder=
+                                        "********" required="" type="password">
+                                        {# <em>1-8 Characters</em> #}
+                                    </div>
+                                </div><!-- Text input-->
+
+                                <div class="control-group">
+                                    <label class="control-label" for=
+                                    "reenterpassword">密碼（再次輸入）:</label>
+
+                                    <div class="controls">
+                                        <input class="input-large" id=
+                                        "reenterpassword" name=
+                                        "reenterpassword" placeholder=
+                                        "********" required="" type="password">
+                                    </div>
+                                </div><!-- Button -->
+
+                                <div class="control-group">
+                                    <label class="control-label" for=
+                                    "btn-register"></label>
+
+                                    <div class="controls">
+                                        <button class="btn btn-success" id=
+                                        "btn-register">註冊</button>
+                                    </div>
+                                </div><br>
+
+                                <div class="alert alert-danger hide">
+                                    <span class=
+                                    "glyphicon glyphicon-exclamation-sign"></span>
+                                    <span class="sr-only">Error:</span>
+                                    <span class='loginMsg'></span>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-default" data-dismiss="modal" type=
+                "button">Close</button><br>
+            </div>
+        </div>
     </div>
-      </div>
-      <div class="modal-footer">
-      <center>
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        </center>
-      </div>
-    </div>
-  </div>
 </div>

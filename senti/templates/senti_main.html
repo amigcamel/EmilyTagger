@@ -62,7 +62,6 @@
         <hr>
         <div id="options"></div>
     </div>
-    {% include 'update.html' %}
     {% include 'jqPlot.html' %}
     {% include 'postDist.html' %}
     {% include 'freqDist.html' %}
@@ -187,10 +186,10 @@
                     return $(this).attr('data-val') == -1;
                 }).hide();
             }
-            else if (last_open_page > 1 && last_open_page <= 899) {
+            else if (last_open_page > 1 && last_open_page <= total_page) {
                 $('.page-nav').show();
             }
-            else if (last_open_page > 899 ) {
+            else if (last_open_page > total_page ) {
                 $('.page-nav').filter(function() {
                     return $(this).attr('data-val') == 1;
                 }).hide();   
@@ -339,8 +338,8 @@
     $('#goToPage').keydown(function (e){
         if(e.keyCode == 13){
             {# --------------------need DRY ---------------- #}
-            if ( $(this).val() < 1 || $(this).val() > 900 ) {
-                alert('請輸入 0 ~ 900')
+            if ( $(this).val() < 1 || $(this).val() > total_page ) {
+                alert('數字需在 0 ~ '+total_page+' 之間')
             }
             else {
                 last_open_page = parseInt($(this).val());
@@ -358,6 +357,9 @@
 
     $(function() {
     //     var init_page = last_open_page-1
+        $.get('{% url "get_total_page" %}', function(data) {
+            total_page = parseInt(data);
+        });
         
         tagType = $.cookie('tagType');
         tag = $.cookie('tag');
@@ -380,9 +382,6 @@
             }).click();
             catBoxInitTop = $('._main').offset().top;
         }, 500);
-
-
-
     });
 
     $("#font-slider").slider({
@@ -419,6 +418,7 @@
         }
 
     });
+
 
 
     $('#cat-box').draggable({
@@ -546,9 +546,9 @@
     }
 
     </style>
-    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css"></style>
-    <link rel="stylesheet" type="text/css" href="{% static "css/featherlight.css" %}">
-    <link rel="stylesheet" type="text/css" href="{% static "jqPlot/jquery.jqplot.min.css" %}">
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/featherlight.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'jqPlot/jquery.jqplot.min.css' %}">
 {% endblock extra_css %}
 
 {% comment %}

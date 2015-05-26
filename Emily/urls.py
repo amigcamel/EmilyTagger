@@ -3,7 +3,7 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    url('^emilytagger/', include('senti.urls')),
-    url('^emilytagger/account/', include('account.urls')),
-    url('^emilytagger/admin/', include(admin.site.urls)),
+    url('^lopetagger/', include('senti.urls')),
+    url('^lopetagger/account/', include('account.urls')),
+    url('^lopetagger/admin/', include(admin.site.urls)),
 )

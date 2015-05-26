@@ -1,14 +1,17 @@
 # -*-coding:utf-8-*-
-from django.shortcuts import render_to_response
-from django.http import HttpResponse
+from django.shortcuts import render_to_response, resolve_url
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.conf import settings
 from rlite_api import update, read_pairs, remove_cue
 from urllib import unquote
+# from collections import OrderedDict
 import re
 import json
 import sqlite3
 from .func import gen_tag_dist
+from .forms import UploadTextForm, ModifyTagForm
+from .sqlconnect import SqlConnect
 
 
 import logging
@@ -19,7 +22,33 @@ DB_PATH = settings.DATABASES['default']['NAME']
 
 
 def main(request):
-    return render_to_response('senti_main.html', context_instance=RequestContext(request))
+    if not request.user.username:
+        request.user.username = 'guest@guest.com'
+    if request.method == 'POST':
+        upload_text_form = UploadTextForm(request.POST, request.FILES)
+        modify_tag_form = ModifyTagForm(request.POST)
+        if request.FILES:
+            # logger.info(request.FILES['upload_file'].name)
+            files = request.FILES.getlist('upload_file')
+            for f in files:
+                logger.info(f.name)
+                text = f.read()
+                sc = SqlConnect(request.user.username)
+                sc.insert_post(text)
+            return HttpResponseRedirect(resolve_url('index'))
+
+        if modify_tag_form.is_valid():
+            res = modify_tag_form.cleaned_data['tag_schema']
+            mod_ref(request, res)
+            return HttpResponseRedirect(resolve_url('index'))
+    else:
+        upload_text_form = UploadTextForm()
+        logger.info(request.user.username)
+        sc = SqlConnect(request.user.username)
+        sc._c.execute('''SELECT schema FROM tags WHERE (id=1)''')
+        ref = sc._c.fetchall()[0][0]
+        modify_tag_form = ModifyTagForm(initial={'tag_schema': ref})
+    return render_to_response('senti_main.html', {'upload_text_form': upload_text_form, 'modify_tag_form': modify_tag_form}, context_instance=RequestContext(request))
 
 
 def get_cand_text(request):
@@ -29,16 +58,16 @@ def get_cand_text(request):
     tag = res['tag']
     subtag = res['subtag']
 
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute("SELECT url, post FROM emilytagger_posts WHERE id=?", (page_num, ))
-    text_id, cand_text = c.fetchall()[0]
-    conn.close()
+    sc = SqlConnect(request.user.username)
+    sc._c.execute('''SELECT url, post FROM posts WHERE id=?''', (page_num, ))
 
+    text_id, cand_text = sc._c.fetchall()[0]
+    text_id = text_id.encode('utf-8')
     pairs = read_pairs(text_id, tag, subtag, request.user.username)
-
     fin = {'pairs': pairs, 'cand_text': cand_text, 'text_id': text_id}
-    return HttpResponse(json.dumps(fin))
+    resp = json.dumps(fin)
+
+    return HttpResponse(resp)
 
 
 def api_remove_cue(request):
@@ -72,10 +101,28 @@ def request_parser(request):
     return req_dic
 
 
+def get_total_page(request):
+    sc = SqlConnect(request.user.username)
+    sc._c.execute('''SELECT count(*) FROM posts''')
+    num = sc._c.fetchall()[0][0]
+    return HttpResponse(num)
+
+
 def load_ref(request):
-    with open(settings.TAG_PATH) as f:
-        ref = f.read()
+    # with open(settings.TAG_PATH) as f:
+    #     ref = f.read()
+    sc = SqlConnect(request.user.username)
+    sc._c.execute('''SELECT schema FROM tags''')
+    ref = sc._c.fetchall()[0][0]
+    logger.info(ref)
+    # ref = json.JSONDecoder(object_pairs_hook=OrderedDict).decode(res)
+    # logger.info(type(ref))
     return HttpResponse(ref)
+
+
+def mod_ref(request, jdata):
+    sc = SqlConnect(request.user.username)
+    sc._c.execute('''UPDATE tags SET schema=?''', (jdata, ))
 
 
 def draw_dist_pie(request, subtag):

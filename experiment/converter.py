@@ -1,5 +1,6 @@
 # -*-coding:utf-8-*-
 from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Style, Color, PatternFill
 from os.path import join, isfile
 from config import OUTPUT_PATH
 import csv
@@ -43,7 +44,10 @@ def to_excel(rows, sheetname, filename):
 
     for col_num, row in enumerate(rows, 1):
         for row_num, col in enumerate(row, 1):
-            ws.cell(row=row_num, column=col_num).value = col
+            cell = ws.cell(row=row_num, column=col_num)
+            cell.value = col
+            # if col == 'y':
+            #     cell.style = Style(fill=PatternFill(patternType='solid', fgColor=Color('FFFF0000')))
     wb.save(filepath)
 
 
