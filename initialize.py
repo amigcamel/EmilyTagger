@@ -18,3 +18,5 @@ if __name__ == "__main__":
         若有任何問題,
         請聯絡amigcamel@gmail.com (阿吉)
         ''')
+    os.mkdir('dbs')
+    os.mkdir('user_dbs')
