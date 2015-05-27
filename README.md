@@ -1,2 +1,5 @@
-# EmilyTagger
-EmilyTagger is a useful sentiment tagger
+# LOPE Annotator
+
+A flexible annotating system which allows users to upload texts and customizes tags.
+
+
