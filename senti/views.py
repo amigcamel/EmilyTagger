@@ -10,7 +10,7 @@ import re
 import json
 import sqlite3
 from .func import gen_tag_dist
-from .forms import UploadTextForm, ModifyTagForm
+from .forms import UploadTextForm, ModifyTagForm, PasteTextForm
 from .sqlconnect import SqlConnect
 
 
@@ -22,25 +22,35 @@ DB_PATH = settings.DATABASES['default']['NAME']
 
 
 def main(request):
-    if not request.user.username:
-        request.user.username = 'guest@guest.com'
     if request.method == 'POST':
         upload_text_form = UploadTextForm(request.POST, request.FILES)
         modify_tag_form = ModifyTagForm(request.POST)
+        paste_text_form = PasteTextForm(request.POST)
         if request.FILES:
             # logger.info(request.FILES['upload_file'].name)
             files = request.FILES.getlist('upload_file')
             for f in files:
-                logger.info(f.name)
+                logger.debug(f.name)
                 text = f.read()
+                logger.debug(text)
                 sc = SqlConnect(request.user.username)
                 sc.insert_post(text)
             return HttpResponseRedirect(resolve_url('index'))
 
         if modify_tag_form.is_valid():
             res = modify_tag_form.cleaned_data['tag_schema']
-            mod_ref(request, res)
-            return HttpResponseRedirect(resolve_url('index'))
+            if len(res.strip()) != 0:
+                mod_ref(request, res)
+                return HttpResponseRedirect(resolve_url('index'))
+
+        if paste_text_form.is_valid():
+            res = paste_text_form.cleaned_data['text']
+            if len(res.strip()) != 0:
+                logger.debug(res)
+                sc = SqlConnect(request.user.username)
+                sc.insert_post(res)
+                return HttpResponseRedirect(resolve_url('index'))
+
     else:
         upload_text_form = UploadTextForm()
         logger.info(request.user.username)
@@ -48,7 +58,16 @@ def main(request):
         sc._c.execute('''SELECT schema FROM tags WHERE (id=1)''')
         ref = sc._c.fetchall()[0][0]
         modify_tag_form = ModifyTagForm(initial={'tag_schema': ref})
-    return render_to_response('senti_main.html', {'upload_text_form': upload_text_form, 'modify_tag_form': modify_tag_form}, context_instance=RequestContext(request))
+        paste_text_form = PasteTextForm()
+    return render_to_response(
+            'senti_main.html',
+            {
+                'upload_text_form': upload_text_form,
+                'modify_tag_form': modify_tag_form,
+                'paste_text_form': paste_text_form
+            },
+            context_instance=RequestContext(request)
+        )
 
 
 def get_cand_text(request):
@@ -121,8 +140,15 @@ def load_ref(request):
 
 
 def mod_ref(request, jdata):
-    sc = SqlConnect(request.user.username)
-    sc._c.execute('''UPDATE tags SET schema=?''', (jdata, ))
+    if len(jdata.strip()) == 0:
+        logger.warning('no data!')
+        raise Exception('no data!')
+    try:
+        json.loads('jdata')
+        sc = SqlConnect(request.user.username)
+        sc._c.execute('''UPDATE tags SET schema=?''', (jdata, ))
+    except:
+        logger.warning('invalid json format')
 
 
 def draw_dist_pie(request, subtag):

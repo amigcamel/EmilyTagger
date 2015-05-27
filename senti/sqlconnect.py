@@ -9,10 +9,12 @@ logger = logging.getLogger(__name__)
 class SqlConnect:
 
     def __init__(self, db_name):
-        if db_name is None:
-            dbpath = settings.DATABASES['default']['NAME']
-        else:
-            dbpath = settings.USER_DB_PATH % db_name
+        # if db_name is None:
+        #     dbpath = settings.DATABASES['default']['NAME']
+        if not db_name:
+            db_name = 'guest@guest.com'
+
+        dbpath = settings.USER_DB_PATH % db_name
         logger.info('dbpath: %s' % dbpath)
         self._conn = sqlite3.connect(dbpath)
         self._conn.isolation_level = None  # allow autocommit
@@ -40,7 +42,10 @@ class SqlConnect:
         self._c.execute('''INSERT INTO tags VALUES (1, '%s')''' % ref)
 
     def insert_post(self, text):
-        self._c.execute('''INSERT INTO posts VALUES (null, 'test', 'test', ?, ?)''', (str(time.time()), text))
+        if len(text.strip()) == 0:
+            logger.warning('empty input!')
+        else:
+            self._c.execute('''INSERT INTO posts VALUES (null, 'test', 'test', ?, ?)''', (str(time.time()), text))
 
 
 if __name__ == '__main__':

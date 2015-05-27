@@ -28,5 +28,9 @@ class UploadTextForm(forms.Form):
         return box
 
 
+class PasteTextForm(forms.Form):
+    text = forms.CharField(required=False, label=(''), widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 20}))
+
+
 class ModifyTagForm(forms.Form):
     tag_schema = forms.CharField(required=False, label=(''), widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 20}))

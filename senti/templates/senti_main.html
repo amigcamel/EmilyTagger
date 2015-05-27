@@ -2,10 +2,15 @@
 {% load staticfiles %}
 
 {% block header %}
-中文情感標記
+LOPE Annotator
 {% endblock header %}
 
 {% block content %}
+        <div class="github-fork-ribbon-wrapper left">
+            <div class="github-fork-ribbon">
+                <a href="https://github.com/amigcamel/LopeAnnotator.git" target="_blank">Fork me on GitHub</a>
+            </div>
+        </div>
     
         <div class="row">
             <div class="col-lg-4">
@@ -180,7 +185,6 @@
             $('#goToPage').val('').attr('placeholder', '目前頁面： '+last_open_page);
             load_cand_text(cand_text);
 
-            {# ---------- need DRY --------------- #}
             if (last_open_page == 1) {
                 $('.page-nav').filter(function() {
                     return $(this).attr('data-val') == -1;
@@ -194,7 +198,6 @@
                     return $(this).attr('data-val') == 1;
                 }).hide();   
             }
-            {# ------------------------------------ #}
 
             get_ref(tag);
 
@@ -549,6 +552,7 @@
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
     <link rel="stylesheet" type="text/css" href="{% static 'css/featherlight.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'jqPlot/jquery.jqplot.min.css' %}">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
 {% endblock extra_css %}
 
 {% comment %}
