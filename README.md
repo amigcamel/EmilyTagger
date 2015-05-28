@@ -18,6 +18,6 @@ Ubuntu 14.04 / OS X 10.10
     python manage.py runserver
     
 打開瀏覽器並輸入url  
-http://localhost:8000/lopetagger
+http://localhost:8000/lope.anno
 
 	     
