@@ -5,7 +5,6 @@ from django.template import RequestContext
 from django.conf import settings
 from rlite_api import update, read_pairs, remove_cue
 from urllib import unquote
-# from collections import OrderedDict
 import re
 import json
 import sqlite3
@@ -26,7 +25,9 @@ def main(request):
         upload_text_form = UploadTextForm(request.POST, request.FILES)
         modify_tag_form = ModifyTagForm(request.POST)
         paste_text_form = PasteTextForm(request.POST)
-        if request.FILES:
+        # if request.FILES:
+        query_dict = request.POST
+        if 'uploadFile' in query_dict:
             # logger.info(request.FILES['upload_file'].name)
             files = request.FILES.getlist('upload_file')
             for f in files:
@@ -37,18 +38,20 @@ def main(request):
                 sc.insert_post(text)
             return HttpResponseRedirect(resolve_url('index'))
 
-        if modify_tag_form.is_valid():
-            res = modify_tag_form.cleaned_data['tag_schema']
-            if len(res.strip()) != 0:
-                mod_ref(request, res)
-                return HttpResponseRedirect(resolve_url('index'))
-
-        if paste_text_form.is_valid():
-            res = paste_text_form.cleaned_data['text']
+        elif 'pasteText' in query_dict:
+            res = query_dict.get('text')
+            logger.info(res)
             if len(res.strip()) != 0:
                 logger.debug(res)
                 sc = SqlConnect(request.user.username)
                 sc.insert_post(res)
+                return HttpResponseRedirect(resolve_url('index'))
+
+        elif 'modifyTag' in query_dict:
+            res = query_dict.get('tag_schema')
+            logger.info(res)
+            if len(res.strip()) != 0:
+                mod_ref(request, res)
                 return HttpResponseRedirect(resolve_url('index'))
 
     else:
@@ -128,23 +131,15 @@ def get_total_page(request):
 
 
 def load_ref(request):
-    # with open(settings.TAG_PATH) as f:
-    #     ref = f.read()
     sc = SqlConnect(request.user.username)
     sc._c.execute('''SELECT schema FROM tags''')
     ref = sc._c.fetchall()[0][0]
-    logger.info(ref)
-    # ref = json.JSONDecoder(object_pairs_hook=OrderedDict).decode(res)
-    # logger.info(type(ref))
     return HttpResponse(ref)
 
 
 def mod_ref(request, jdata):
-    if len(jdata.strip()) == 0:
-        logger.warning('no data!')
-        raise Exception('no data!')
     try:
-        json.loads('jdata')
+        json.loads(jdata)
         sc = SqlConnect(request.user.username)
         sc._c.execute('''UPDATE tags SET schema=?''', (jdata, ))
     except:

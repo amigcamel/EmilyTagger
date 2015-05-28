@@ -340,7 +340,6 @@ LOPE Annotator
 
     $('#goToPage').keydown(function (e){
         if(e.keyCode == 13){
-            {# --------------------need DRY ---------------- #}
             if ( $(this).val() < 1 || $(this).val() > total_page ) {
                 alert('數字需在 0 ~ '+total_page+' 之間')
             }
@@ -348,8 +347,6 @@ LOPE Annotator
                 last_open_page = parseInt($(this).val());
                 senti_main(last_open_page);                
             }
-            {# --------------------------------------------- #}
-
         }
     });
     {# only allow integer input #}

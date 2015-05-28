@@ -59,7 +59,7 @@
                 <ul class="nav navbar-nav navbar-right">
                     {% if user.is_authenticated %}
                         <li><a href="#" data-toggle="modal">{{user}}</a></li>
-                        <li><a href="#" data-toggle="modal" data-target="#uploadText">設定</a></li>
+                        <li><a href="#" data-toggle="modal" data-target="#userSetting">設定</a></li>
                         <li><a href="#" onClick="introJs().start()">操作說明</a></li>
                         <li><a href="#" id="signout">登出</a></li>
                     {% else %}
