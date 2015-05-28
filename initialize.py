@@ -7,6 +7,9 @@ if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Emily.settings")
     from senti.sqlconnect import SqlConnect
 
+    os.mkdir('dbs')
+    os.mkdir('user_dbs')
+
     sc = SqlConnect('guest@guest.com')
     sc.create_tables()
     sc.create_sample_tags()
@@ -18,5 +21,3 @@ if __name__ == "__main__":
         若有任何問題,
         請聯絡amigcamel@gmail.com (阿吉)
         ''')
-    os.mkdir('dbs')
-    os.mkdir('user_dbs')
