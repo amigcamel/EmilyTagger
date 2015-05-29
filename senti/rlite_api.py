@@ -1,6 +1,6 @@
 # -*-coding:utf8-*-
 import hirlite
-import json
+import simplejson as json
 from django.conf import settings
 from os.path import join
 from itertools import chain
@@ -15,13 +15,18 @@ class DB_Conn:
             user = 'guest@guest.com'
         logger.info('%s connection to db' % user)
         db_path = join(settings.RLITE_DB_PATH, user)
-        self.db = hirlite.Rlite(path=db_path, encoding='utf-8')
-        logger.debug('rlite: Connection established')
+        self.db = hirlite.Rlite(path=db_path)
+        # logger.debug('rlite: Connection established')
+
+    def command(self, *args):
+        '''A wrapper for Rlite.db.command which also ensures the input strings are all utf-8'''
+        args = [i.encode('utf-8') for i in args]
+        return self.db.command(*args)
 
     def read(self, uid):
         '''read tagged words by uid'''
 
-        res = self.db.command('get', uid)
+        res = self.command('get', uid)
 
         if res:
             res = json.loads(res)
@@ -30,7 +35,7 @@ class DB_Conn:
         return res
 
     def save(self, uid, cue, value):
-        dic = self.db.command('get', uid)
+        dic = self.command('get', uid)
         if dic:
             dic = json.loads(dic)
         else:
@@ -40,7 +45,7 @@ class DB_Conn:
         obj = json.dumps(dic)
         logger.debug('obj: ' + str(obj))
 
-        self.db.command('set', uid, obj)
+        self.command('set', uid, obj)
 
         logger.debug('UID: %s, CUE: %s, VALUE: %s -- update successfully!' % (uid, cue, value))
         return True
@@ -49,14 +54,15 @@ class DB_Conn:
         dic = self.read(uid)
         dic.pop(cue)
         obj = json.dumps(dic)
-        self.db.command('set', uid, obj)
+        self.command('set', uid, obj)
         logger.debug('UID: %s, CUE: %s deleted successfully!' % (uid, cue))
         return True
 
     def collect(self, subtag):
-        all_keys = self.db.command('keys', '*')
+        all_keys = self.command('keys', '*')
         con = []
         for key in all_keys:
+            key = key.decode('utf-8')
             if key.split('__')[-1] == subtag:
                 value = self.read(key)
                 con.append([key, value])

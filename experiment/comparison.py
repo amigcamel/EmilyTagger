@@ -8,7 +8,7 @@ from analysis import filter_tagged_words, load_val_ref
 from converter import to_excel, to_csv
 import csv
 import hirlite
-import json
+import simplejson as json
 import multiprocessing
 import numpy
 import logging

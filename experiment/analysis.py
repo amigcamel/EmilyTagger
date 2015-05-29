@@ -8,7 +8,7 @@ from itertools import chain, groupby
 from collections import Counter, OrderedDict, defaultdict
 from converter import to_csv, to_excel
 from config import LOG_PATH, GFDIST_PATH, POSTS_SEG_PATH, TAG_PATH, DB_PATH, TARGET_USER, TAG, SUBTAG, OUTPUT_PATH
-import json
+import simplejson as json
 import hirlite
 import logging
 

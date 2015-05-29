@@ -3,14 +3,12 @@ from django.shortcuts import render_to_response, resolve_url
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.conf import settings
-from urllib.parse import unquote
 from .rlite_api import update, read_pairs, remove_cue
 from .func import gen_tag_dist
 from .forms import UploadTextForm, ModifyTagForm, PasteTextForm
 from .sqlconnect import SqlConnect
-import re
-import json
-import sqlite3
+import simplejson as json
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -73,7 +71,7 @@ def main(request):
 
 
 def get_cand_text(request):
-    req = request.POST
+    req = request_parser(request)
     page_num = req.get('last_open_page')
     logger.debug('page_num: %s' % str(page_num))
     tag, subtag = req.get('tag'), req.get('subtag')
@@ -102,6 +100,7 @@ def api(request):
     res = request_parser(request)
     user = request.user.username
     res['user'] = user
+    logger.info(res['value'])
     res = update(**res)
     if res:
         return HttpResponse('ok')
@@ -110,15 +109,14 @@ def api(request):
 
 
 def request_parser(request):
-    req_dic = dict()
-    req = request.read().split('&')
-    for r in req:
-        res = re.search('(.+)=(.*)', r)
-        key, val = res.group(1), res.group(2)
-        req_dic[key] = unquote(val)
-    if 'csrfmiddlewaretoken' in req_dic:
-        req_dic.pop('csrfmiddlewaretoken')
-    return req_dic
+    if request.method == 'POST':
+        req = request.POST
+    elif request.method == 'GET':
+        req = request.GET
+
+    req = req.copy().dict()
+    req.pop('csrfmiddlewaretoken')
+    return req
 
 
 def get_total_page(request):
@@ -146,16 +144,16 @@ def mod_ref(request, jdata):
 
 def draw_dist_pie(request, subtag):
     res = gen_tag_dist(request.user.username, subtag)
+    logger.debug(res)
     return HttpResponse(json.dumps(res, ensure_ascii=False))
 
 
 def get_post_dist(request, subtag):
     from .rlite_api import DB_Conn
     from itertools import groupby, chain
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('select id, source, senti, url from emilytagger_posts')
-    res = c.fetchall()
+    sc = SqlConnect(request.user.username)
+    sc._c.execute('select id, source, senti, url from posts')
+    res = sc._c.fetchall()
     res = [list(i) for i in res]
 
     dbconn = DB_Conn(request.user.username)
@@ -171,7 +169,7 @@ def get_post_dist(request, subtag):
             con.append(0)
         tag_res_con.append(tag_res)
 
-    tmp = zip(*res)
+    tmp = list(zip(*res))
     tmp.append(con)
     tmp.append(tag_res_con)
     res = map(list, zip(*tmp))
@@ -198,10 +196,9 @@ def get_freq_dist(request, subtag='Emotion'):
         post_range = range(int(post_start), int(post_end)+1)
         post_range_con.append(post_range)
 
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('select id, source, senti, url from emilytagger_posts')
-    res = c.fetchall()
+    sc = SqlConnect(request.user.username)
+    sc._c.execute('select id, source, senti, url from posts')
+    res = sc._c.fetchall()
     res = [list(i) for i in res]
 
     dbconn = DB_Conn(request.user.username)
@@ -216,20 +213,20 @@ def get_freq_dist(request, subtag='Emotion'):
             words_con += kv.keys()
         words = Counter(words)
         words = words.items()
-        words.sort(key=lambda x: x[1], reverse=True)
+        words = sorted(words, key=lambda x: x[1], reverse=True)
         words = [(i[0], i[1]) for i in words if i[1] > 1]
         fdist_lst.append(words)
 
     all_words = Counter(words_con)
     all_words = all_words.items()
-    all_words.sort(key=lambda x: x[1], reverse=True)
+    all_words = sorted(all_words, key=lambda x: x[1], reverse=True)
     all_words = [(i[0], i[1]) for i in all_words if i[1] > 1]
     fdist_lst.append(all_words)
 
     tar = ['%s-%s' % (i[1], i[2]) for i in dist]
     tar.append('all')
 
-    return HttpResponse(json.dumps(zip(tar, fdist_lst), ensure_ascii=False))
+    return HttpResponse(json.dumps(list(zip(tar, fdist_lst)), ensure_ascii=False))
 
 
 if __name__ == '__main__':

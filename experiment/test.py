@@ -1,7 +1,7 @@
 # -*-coding:utf-8-*-
 # from __future__ import unicode_literals
 import sys
-# import json
+# import simplejson as json
 
 
 def force_encoding_output(func):

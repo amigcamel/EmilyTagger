@@ -1,10 +1,11 @@
 # -*-coding:utf8-*-
 from .rlite_api import DB_Conn
+from .sqlconnect import SqlConnect
 from itertools import groupby, chain
 from collections import OrderedDict
 from django.conf import settings
-import json
-import sqlite3
+import simplejson as json
+
 
 DB_PATH = settings.DATABASES['default']['NAME']
 TAG_PATH = settings.TAG_PATH
@@ -20,10 +21,9 @@ def gen_tag_dist(user, subtag):
     dbconn = DB_Conn(user)
     res = dbconn.collect(subtag)
 
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('select id, source, senti, url from emilytagger_posts')
-    res = c.fetchall()
+    sc = SqlConnect(user)
+    sc._c.execute('select id, source, senti, url from posts')
+    res = sc._c.fetchall()
     res = [list(i) for i in res]
 
     con = []
@@ -71,5 +71,5 @@ def _dist_pie(ref, tags):
         vals.append(partnum)
     totalnum = sum(vals) * 1.0
     percentage = [v/totalnum*100 for v in vals]
-    lst = zip(ref, percentage)
+    lst = list(zip(ref, percentage))
     return lst, vals
