@@ -3,7 +3,7 @@
 A flexible annotating system which allows users to upload texts and customize tags.
 
 ## 環境
-Python 2.7.9  
+Python 3.4.3
 Django 1.7.4  
 Ubuntu 14.04 / OS X 10.10
 
