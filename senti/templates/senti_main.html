@@ -356,23 +356,21 @@ LOPE Annotator
 
 
     $(function() {
-    //     var init_page = last_open_page-1
         $.get('{% url "get_total_page" %}', function(data) {
             total_page = parseInt(data);
         });
-        
-        tagType = $.cookie('tagType');
-        tag = $.cookie('tag');
 
-        if (tagType === undefined) {
-            tagType = $('.tag-type').first().text();
-        }
-        if (tag === undefined) {
-            tag = $(".btn-subtag").first().text();
-        }
-
-    //     senti_main(last_open_page);
         setTimeout(function() {
+            tagType = $.cookie('tagType');
+            tag = $.cookie('tag');
+
+            if (tagType === undefined || tagType === '') {
+                tagType = $('.tag-type').first().text();
+            }
+            if (tag === undefined || tag === '') {
+                tag = $(".btn-subtag").first().text();
+            }
+
             $('.tag-type').filter(function() {
                 return $(this).text() === tagType;
             }).click();
@@ -398,27 +396,24 @@ LOPE Annotator
     {# make cat-box always visible: http://stackoverflow.com/a/27630297/1105489 #}    
 
 
-    $(window).on('scroll', function() {
+    setTimeout(function() {
+        $(window).on('scroll', function() {
+            var windowCurrTop = $(window).scrollTop(),
+                // docBottom = $(document).height(),
+                catBoxCurrTop = $('#cat-box').offset().top;
+                // catBoxCurrBotttom = catBoxCurrTop + $('#cat-box').height();
+            // console.log(catBoxCurrTop, windowCurrTop, catBoxCurrBotttom, docBottom);
 
-        var windowCurrTop = $(window).scrollTop(),
-            // docBottom = $(document).height(),
-            catBoxCurrTop = $('#cat-box').offset().top;
-            // catBoxCurrBotttom = catBoxCurrTop + $('#cat-box').height();
-
-        // console.log(catBoxCurrTop, windowCurrTop, catBoxCurrBotttom, docBottom);
-
-        if (catBoxCurrTop != windowCurrTop) {
-            if (windowCurrTop > catBoxInitTop ) {
-                console.log(catBoxCurrTop, catBoxInitTop, windowCurrTop);
-                setTimeout(function() {
-                    $('#cat-box').offset({'top': windowCurrTop});
-                }, 200);
+            if (catBoxCurrTop != windowCurrTop) {
+                if (windowCurrTop > catBoxInitTop ) {
+                    console.log(catBoxCurrTop, catBoxInitTop, windowCurrTop);
+                    setTimeout(function() {
+                        $('#cat-box').offset({'top': windowCurrTop});
+                    }, 200);
+                }
             }
-
-        }
-
-    });
-
+        });
+    }, 700);
 
 
     $('#cat-box').draggable({
