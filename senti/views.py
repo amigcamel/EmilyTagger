@@ -3,15 +3,14 @@ from django.shortcuts import render_to_response, resolve_url
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.conf import settings
-from rlite_api import update, read_pairs, remove_cue
-from urllib import unquote
-import re
-import json
-import sqlite3
+from urllib.parse import unquote
+from .rlite_api import update, read_pairs, remove_cue
 from .func import gen_tag_dist
 from .forms import UploadTextForm, ModifyTagForm, PasteTextForm
 from .sqlconnect import SqlConnect
-
+import re
+import json
+import sqlite3
 
 import logging
 logger = logging.getLogger(__name__)
@@ -74,17 +73,16 @@ def main(request):
 
 
 def get_cand_text(request):
-    res = request_parser(request)
-    page_num = res['last_open_page']
+    req = request.POST
+    page_num = req.get('last_open_page')
     logger.debug('page_num: %s' % str(page_num))
-    tag = res['tag']
-    subtag = res['subtag']
+    tag, subtag = req.get('tag'), req.get('subtag')
 
     sc = SqlConnect(request.user.username)
     sc._c.execute('''SELECT url, post FROM posts WHERE id=?''', (page_num, ))
 
     text_id, cand_text = sc._c.fetchall()[0]
-    text_id = text_id.encode('utf-8')
+
     pairs = read_pairs(text_id, tag, subtag, request.user.username)
     fin = {'pairs': pairs, 'cand_text': cand_text, 'text_id': text_id}
     resp = json.dumps(fin)

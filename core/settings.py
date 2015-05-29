@@ -1,13 +1,3 @@
-"""
-Django settings for Emily project.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/1.6/topics/settings/
-
-For the full list of settings and their values, see
-https://docs.djangoproject.com/en/1.6/ref/settings/
-"""
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 # import glob
@@ -62,9 +52,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'Emily.urls'
+ROOT_URLCONF = 'core.urls'
 
-WSGI_APPLICATION = 'Emily.wsgi.application'
+WSGI_APPLICATION = 'core.wsgi.application'
 
 
 # Database
@@ -94,7 +84,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
-STATIC_URL = '/static_emily/'
+STATIC_URL = '/static_lopeanno/'
 STATICFILES_DIRS = (
     os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static'),
 )

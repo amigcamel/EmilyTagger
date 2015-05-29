@@ -4,7 +4,6 @@ import json
 from django.conf import settings
 from os.path import join
 from itertools import chain
-import traceback
 import logging
 logger = logging.getLogger(__name__)
 
@@ -14,19 +13,15 @@ class DB_Conn:
     def __init__(self, user):
         if not user:
             user = 'guest@guest.com'
-        logger.info(user)
-        user = user.encode('utf8')
+        logger.info('%s connection to db' % user)
         db_path = join(settings.RLITE_DB_PATH, user)
         self.db = hirlite.Rlite(path=db_path, encoding='utf-8')
         logger.debug('rlite: Connection established')
 
     def read(self, uid):
         '''read tagged words by uid'''
-        try:
-            res = self.db.command('get', uid)
-        except UnicodeError:
-            logger.warning(traceback.format_exc())
-            res = self.db.command('get', uid.encode('utf-8'))
+
+        res = self.db.command('get', uid)
 
         if res:
             res = json.loads(res)
@@ -52,11 +47,10 @@ class DB_Conn:
 
     def remove(self, uid, cue):
         dic = self.read(uid)
-        cue = ensure_unicode(cue)
         dic.pop(cue)
         obj = json.dumps(dic)
         self.db.command('set', uid, obj)
-        logger.debug('UID: %s, CUE: %s deleted successfully!' % (uid, cue.encode('utf8')))
+        logger.debug('UID: %s, CUE: %s deleted successfully!' % (uid, cue))
         return True
 
     def collect(self, subtag):
@@ -102,12 +96,3 @@ def remove_cue(text_id, tag, subtag, cue, user):
     conn = DB_Conn(user)
     res = conn.remove(uid, cue)
     return res
-
-
-def ensure_unicode(string):
-    if not isinstance(string, unicode):
-        try:
-            string = string.decode('utf-8')
-        except:
-            raise UnicodeError('cannot determine encoding')
-    return string

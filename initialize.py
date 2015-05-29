@@ -4,7 +4,7 @@
 import os
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Emily.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
     from senti.sqlconnect import SqlConnect
 
     os.mkdir('dbs')
