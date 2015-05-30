@@ -55,8 +55,8 @@ def main(request):
         upload_text_form = UploadTextForm()
         logger.info(request.user.username)
         sc = SqlConnect(request.user.username)
-        sc._c.execute('''SELECT schema FROM tags WHERE (id=1)''')
-        ref = sc._c.fetchall()[0][0]
+        res = sc.fetch('''SELECT schema FROM tags WHERE (id=1)''')
+        ref = res[0][0]
         modify_tag_form = ModifyTagForm(initial={'tag_schema': ref})
         paste_text_form = PasteTextForm()
     return render_to_response(
@@ -77,9 +77,8 @@ def get_cand_text(request):
     tag, subtag = req.get('tag'), req.get('subtag')
 
     sc = SqlConnect(request.user.username)
-    sc._c.execute('''SELECT url, post FROM posts WHERE id=?''', (page_num, ))
-
-    text_id, cand_text = sc._c.fetchall()[0]
+    res = sc.fetch('''SELECT post_id, post FROM posts WHERE page=?''', (page_num, ))
+    text_id, cand_text = res[0]
 
     pairs = read_pairs(text_id, tag, subtag, request.user.username)
     fin = {'pairs': pairs, 'cand_text': cand_text, 'text_id': text_id}
@@ -121,23 +120,31 @@ def request_parser(request):
 
 def get_total_page(request):
     sc = SqlConnect(request.user.username)
-    sc._c.execute('''SELECT count(*) FROM posts''')
-    num = sc._c.fetchall()[0][0]
+    res = sc.fetch('''SELECT max(page) FROM posts''')
+    num = res[0][0]
     return HttpResponse(num)
 
 
 def load_ref(request):
     sc = SqlConnect(request.user.username)
-    sc._c.execute('''SELECT schema FROM tags''')
-    ref = sc._c.fetchall()[0][0]
+    res = sc.fetch('''SELECT schema FROM tags''')
+    ref = res[0][0]
     return HttpResponse(ref)
+
+
+from django.views.decorators.csrf import csrf_exempt
+@csrf_exempt
+def delete_post(request):
+    if request.method == 'POST':
+        text_id = request.POST.get('last_open_page')
+        return HttpResponse(text_id)
 
 
 def mod_ref(request, jdata):
     try:
         json.loads(jdata)
         sc = SqlConnect(request.user.username)
-        sc._c.execute('''UPDATE tags SET schema=?''', (jdata, ))
+        sc.exec('''UPDATE tags SET schema=?''', (jdata, ))
     except:
         logger.warning('invalid json format')
 
@@ -152,8 +159,7 @@ def get_post_dist(request, subtag):
     from .rlite_api import DB_Conn
     from itertools import groupby, chain
     sc = SqlConnect(request.user.username)
-    sc._c.execute('select id, source, senti, url from posts')
-    res = sc._c.fetchall()
+    res = sc.fetch('select id, source, senti, url from posts')
     res = [list(i) for i in res]
 
     dbconn = DB_Conn(request.user.username)
@@ -197,8 +203,7 @@ def get_freq_dist(request, subtag='Emotion'):
         post_range_con.append(post_range)
 
     sc = SqlConnect(request.user.username)
-    sc._c.execute('select id, source, senti, url from posts')
-    res = sc._c.fetchall()
+    res = sc.fetch('select id, source, senti, url from posts')
     res = [list(i) for i in res]
 
     dbconn = DB_Conn(request.user.username)

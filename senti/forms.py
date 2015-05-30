@@ -6,7 +6,9 @@ FILE_SIZE_LIMIT = 5000  # KB
 
 
 class UploadTextForm(forms.Form):
-    upload_file = forms.FileField(required=False, label=("請選擇文本"), help_text="檔案大小限制: %d KB" % FILE_SIZE_LIMIT, widget=forms.FileInput(attrs={'multiple': 'multiple'}))
+    upload_file = forms.FileField(required=False, label=("請選擇文本(可複選)"), help_text="檔案大小限制: %d KB" % FILE_SIZE_LIMIT, widget=forms.FileInput(attrs={'multiple': 'multiple'}))
+    source = forms.CharField(required=False, label=('文本來源'), widget=forms.TextInput(attrs={'class': 'form-control'}))
+    category = forms.CharField(required=False, label=('文本分類'), widget=forms.TextInput(attrs={'class': 'form-control'}))
 
     def clean_upload_file(self):
         file_size_limit = FILE_SIZE_LIMIT * 1024
@@ -29,7 +31,9 @@ class UploadTextForm(forms.Form):
 
 
 class PasteTextForm(forms.Form):
-    text = forms.CharField(required=False, label=(''), widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 20}))
+    post = forms.CharField(required=False, label=(''), widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 20}))
+    source = forms.CharField(required=False, label=('文本來源'), widget=forms.TextInput(attrs={'class': 'form-control'}))
+    category = forms.CharField(required=False, label=('文本分類'), widget=forms.TextInput(attrs={'class': 'form-control'}))
 
 
 class ModifyTagForm(forms.Form):

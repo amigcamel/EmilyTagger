@@ -1,7 +1,6 @@
 # -*-coding: utf-8 -*-
 from django.conf import settings
 import sqlite3
-import time
 import logging
 logger = logging.getLogger(__name__)
 
@@ -9,8 +8,6 @@ logger = logging.getLogger(__name__)
 class SqlConnect:
 
     def __init__(self, db_name):
-        # if db_name is None:
-        #     dbpath = settings.DATABASES['default']['NAME']
         if not db_name:
             db_name = 'guest@guest.com'
 
@@ -24,29 +21,24 @@ class SqlConnect:
         self._conn.close()
         logger.debug('Connection closed')
 
-    def close(self):
-        self._conn.close()
-        logger.debug('Connection closed')
+    def exec(self, cmd, *args):
+        self._c.execute(cmd, *args)
 
-    def commit(self):
-        self._conn.commit()
-        logger.debug('data committd')
+    def fetch(self, cmd, *args):
+        self.exec(cmd, *args)
+        return self._c.fetchall()
 
     def create_tables(self):
-        self._c.execute('''CREATE TABLE posts (id integer primary key autoincrement, source text, senti text, url text, post text)''')
-        self._c.execute('''CREATE TABLE tags (id integer primary key, schema text)''')
+        self.exec('''CREATE TABLE posts (post_id text primary key, page integer, source text, category text, post text)''')
+        self.exec('''CREATE TABLE tags (id integer primary key, schema text)''')
 
     def create_sample_tags(self):
         with open(settings.TAG_PATH) as f:
             ref = f.read()
-        self._c.execute('''INSERT INTO tags VALUES (1, '%s')''' % ref)
+        self.exec('''INSERT INTO tags VALUES (1, '%s')''' % ref)
 
-    def insert_post(self, text):
-        if len(text.strip()) == 0:
+    def insert_post(self, post_id, page, source, category, post):
+        if len(post.strip()) == 0:
             logger.warning('empty input!')
         else:
-            self._c.execute('''INSERT INTO posts VALUES (null, 'test', 'test', ?, ?)''', (str(time.time()), text))
-
-
-if __name__ == '__main__':
-    sc = SqlConnect('amigcamel@gmail.com')
+            self.exec('''INSERT INTO posts VALUES (?, ?, ?, ?, ?)''', (post_id, page, source, category, post))
