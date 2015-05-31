@@ -1,5 +1,6 @@
 # -*-coding: utf-8 -*-
 from django.conf import settings
+from datetime import datetime
 import sqlite3
 import logging
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ class SqlConnect:
         return self._c.fetchall()
 
     def create_tables(self):
-        self.exec('''CREATE TABLE posts (post_id TEXT PRIMARY KEY, page INTEGER, source TEXT, category TEXT, post TEXT)''')
+        self.exec('''CREATE TABLE posts (post_id TEXT PRIMARY KEY, page INTEGER, title TEXT, source TEXT, category TEXT, post TEXT, upload_time DATE)''')
         self.exec('''CREATE TABLE tags (id INTEGER PRIMARY KEY, schema TEXT)''')
 
     def create_sample_tags(self):
@@ -37,7 +38,7 @@ class SqlConnect:
             ref = f.read()
         self.exec('''INSERT INTO tags VALUES (1, '%s')''' % ref)
 
-    def insert_post(self, post_id, source, category, post):
+    def insert_post(self, title, source, category, post):
         if len(post.strip()) == 0:
             logger.warning('empty input!')
         else:
@@ -46,7 +47,9 @@ class SqlConnect:
                 page = 1
             else:
                 page += 1
-            self.exec('''INSERT INTO posts VALUES (?, ?, ?, ?, ?)''', (post_id, page, source, category, post))
+            now = datetime.now().replace(microsecond=0)
+            post_id = str(now.timestamp())
+            self.exec('''INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?, ?)''', (post_id, page, title, source, category, post, str(now)))
 
     def hide_post(self, post_id):
         self.exec('''UPDATE posts SET page=-1 WHERE (post_id=?)''', (post_id, ))

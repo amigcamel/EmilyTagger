@@ -186,11 +186,15 @@ LOPE Annotator
             $('#goToPage').val('').attr('placeholder', '目前頁面： '+last_open_page);
             load_cand_text(cand_text);
 
-            if (last_open_page == 1) {
+            if (last_open_page == 1 && last_open_page == total_page) {
+                $('.page-nav').hide();
+            }
+            else if (last_open_page == 1) {
+                $('.page-nav').hide();
                 $('.page-nav[data-val="-1"]').hide();
                 $('.page-nav[data-val="1"]').show();
-            }
-            if (last_open_page == total_page) {
+            }            
+            else if (last_open_page == total_page) {
                 $('.page-nav[data-val="1"]').hide();
                 $('.page-nav[data-val="-1"]').show();
             }
