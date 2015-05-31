@@ -32,13 +32,17 @@ LOPE Annotator
         <div class="col-md-6">
             <div class="row">
                 <div class="col-md-4">
-                    <button class="btn btn-default page-nav" data-val='-1'><span class="glyphicon glyphicon-chevron-left"></span>上一篇</button>
+                    <button class="btn btn-default btn-sm page-nav" data-val='-1'><span class="glyphicon glyphicon-chevron-left"></span>上一篇</button>
                 </div>
                 <div class="col-md-4">
-                    <input type="number" class="form-control" id="goToPage" placeholder="" data-intro="直接輸入到達指定頁碼">
+                    <div class="input-group input-group-sm"><span class="input-group-btn"><button class="btn btn-default btn-sm" data-toggle="modal" data-target="#postListModal"><span class="glyphicon glyphicon-search"></span>
+                        </button>
+                        </span>
+                        <input type="number" class="form-control" id="goToPage" placeholder="" data-intro="直接輸入到達指定頁碼">
+                    </div>
                 </div>
                 <div class="col-md-4">
-                    <button class="btn btn-default page-nav" data-val='1' style="float:right">下一篇<span class="glyphicon glyphicon-chevron-right"></span></button>
+                    <button class="btn btn-default btn-sm page-nav" data-val='1' style="float:right">下一篇<span class="glyphicon glyphicon-chevron-right"></span></button>
                 </div>
             </div>
             <div class="clearfix"></div>
@@ -71,6 +75,7 @@ LOPE Annotator
     {% include 'jqPlot.html' %}
     {% include 'postDist.html' %}
     {% include 'freqDist.html' %}
+    {% include 'post_list_modal.html' %}
 {% endblock content %}
 
 {% block extra_js %}
@@ -89,7 +94,6 @@ LOPE Annotator
 
 
     <script>
-
     /*CopyRight عبد النور التومي 
     http://abdennour-insat.blogspot.com/2012/09/about-me.html
     */  
@@ -370,6 +374,11 @@ LOPE Annotator
         });
     });
 
+    {# show post list #}
+    // $('#postList').click(function() {
+    //     alert('ok');
+    // })
+
     $(function() {
         $.get('{% url "get_total_page" %}', function(data) {
             total_page = parseInt(data);
@@ -553,6 +562,10 @@ LOPE Annotator
     .featherlight {
         position: relative;
         z-index: 99999 !important;
+    }
+
+    .post_list_row {
+        cursor: pointer;
     }
 
     </style>

@@ -150,6 +150,12 @@ def mod_ref(request, jdata):
         logger.warning('invalid json format')
 
 
+def show_post_list(request):
+    sc = SqlConnect(request.user.username)
+    res = sc.fetch('''SELECT page, title, upload_time FROM posts WHERE (page!=-1)''')
+    return HttpResponse(json.dumps(res, ensure_ascii=False))
+
+
 def draw_dist_pie(request, subtag):
     res = gen_tag_dist(request.user.username, subtag)
     logger.debug(res)

@@ -4,11 +4,13 @@
         <div class="modal-content">
             <ul class="nav nav-tabs">
                 <li class="active">
-                    <a data-toggle="tab" href="#uploadFile">上傳文本</a>
-                </li>
-                <li class="">
                     <a data-toggle="tab" href="#pasteText">貼上文本</a>
                 </li>
+                {% comment %}
+                <li class="active">
+                    <a data-toggle="tab" href="#uploadFile">上傳文本</a>
+                </li>
+                {% endcomment %}
                 <li class="">
                     <a data-toggle="tab" href="#modifyTag">增修標記</a>
                 </li>
@@ -17,19 +19,22 @@
 
             <div class="modal-body">
                 <div class="tab-content">
-                    <div class="tab-pane fade active in" id="uploadFile">
-                        <form action="." method="post" enctype="multipart/form-data">{% csrf_token %}
-                            {{upload_text_form.as_p}}
-                            <input class="btn btn-default" type="submit" name="uploadFile" value="上傳" />
-                        </form>
-                    </div>
 
-                    <div class="tab-pane fade" id="pasteText">
+                    <div class="tab-pane fade active in" id="pasteText">
                         <form action="." method="post">{% csrf_token %} 
                             {{paste_text_form.as_p}} 
                             <input class="btn btn-default" type="submit" name="pasteText" value="貼上" />
                         </form>
                     </div>
+
+                    {% comment %}
+                    <div class="tab-pane fade" id="uploadFile">
+                        <form action="." method="post" enctype="multipart/form-data">{% csrf_token %}
+                            {{upload_text_form.as_p}}
+                            <input class="btn btn-default" type="submit" name="uploadFile" value="上傳" />
+                        </form>
+                    </div>
+                    {% endcomment %}
 
                     <div class="tab-pane fade" id="modifyTag">
                         <form action="." method="post">{% csrf_token %} 

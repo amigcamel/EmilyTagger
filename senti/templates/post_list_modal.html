@@ -1,0 +1,68 @@
+<div class="modal fade" id="postListModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close" data-dismiss="modal" type="button"><span>&times;</span></button>
+                <h4 class="modal-title">文本列表</h4>
+            </div>
+
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>頁數</th>
+                            <th>標題</th>
+                            <th>上傳時間</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-postList"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% verbatim %}
+<script id="hb_postList" type="text/x-handlebars-template">
+    {{#each objects}}
+    <tr class="post_list_row" data-val="{{this.[0]}}">
+        <td>{{this.[0]}}</td>
+        <td>{{this.[1]}}</td>
+        <td>{{this.[2]}}</td>
+    </tr>
+    {{/each}}
+</script>
+{% endverbatim %}
+
+
+<script type="text/javascript">
+    setTimeout(function() {
+        $('#postListModal').on('shown.bs.modal', function (e) {
+            var target = $('#postListModal > div.modal-dialog > div > div.modal-body');
+            var spinner = new Spinner().spin();
+            target.append(spinner.el);
+
+            var url = '{% url "show_post_list" %}';
+            $.get(url, function(data) {
+                data = JSON.parse(data);
+                spinner.stop();
+                dpSource   = $("#hb_postList").html();
+                dpTemplate = Handlebars.compile(dpSource);
+                dpHtml = dpTemplate({objects: data});
+                $('#tbody-postList').empty();
+                $('#tbody-postList').html(dpHtml);
+
+            })
+        });
+        $("#postList").on('hidden.bs.modal', function () {
+            $(this).data('bs.modal', null);
+        });
+    }, 1000);
+
+    $('body').on('click', '.post_list_row', function() {
+        last_open_page = parseInt($(this).attr('data-val'));
+        $('#postListModal').modal('toggle');
+        senti_main(last_open_page);
+    })
+
+</script>
