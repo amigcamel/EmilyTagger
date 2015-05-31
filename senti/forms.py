@@ -7,6 +7,7 @@ FILE_SIZE_LIMIT = 5000  # KB
 
 class UploadTextForm(forms.Form):
     upload_file = forms.FileField(required=False, label=("請選擇文本(可複選)"), help_text="檔案大小限制: %d KB" % FILE_SIZE_LIMIT, widget=forms.FileInput(attrs={'multiple': 'multiple'}))
+    post_id = forms.CharField(required=False, label=('文本ID'), widget=forms.TextInput(attrs={'class': 'form-control'}))
     source = forms.CharField(required=False, label=('文本來源'), widget=forms.TextInput(attrs={'class': 'form-control'}))
     category = forms.CharField(required=False, label=('文本分類'), widget=forms.TextInput(attrs={'class': 'form-control'}))
 
@@ -32,6 +33,7 @@ class UploadTextForm(forms.Form):
 
 class PasteTextForm(forms.Form):
     post = forms.CharField(required=False, label=(''), widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 20}))
+    post_id = forms.CharField(required=False, label=('文本ID'), widget=forms.TextInput(attrs={'class': 'form-control'}))
     source = forms.CharField(required=False, label=('文本來源'), widget=forms.TextInput(attrs={'class': 'form-control'}))
     category = forms.CharField(required=False, label=('文本分類'), widget=forms.TextInput(attrs={'class': 'form-control'}))
 

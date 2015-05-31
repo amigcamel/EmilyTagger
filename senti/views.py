@@ -36,12 +36,12 @@ def main(request):
             return HttpResponseRedirect(resolve_url('index'))
 
         elif 'pasteText' in query_dict:
-            res = query_dict.get('text')
-            logger.info(res)
-            if len(res.strip()) != 0:
-                logger.debug(res)
+            r = request_parser(request)
+            r.pop('pasteText')
+            logger.info(r)
+            if len(r.get('post').strip()) != 0:
                 sc = SqlConnect(request.user.username)
-                sc.insert_post(res)
+                sc.insert_post(**r)
                 return HttpResponseRedirect(resolve_url('index'))
 
         elif 'modifyTag' in query_dict:
@@ -132,12 +132,13 @@ def load_ref(request):
     return HttpResponse(ref)
 
 
-from django.views.decorators.csrf import csrf_exempt
-@csrf_exempt
-def delete_post(request):
+def hide_post(request):
     if request.method == 'POST':
-        text_id = request.POST.get('last_open_page')
-        return HttpResponse(text_id)
+        r = request_parser(request)
+        post_id = r['post_id']
+        sc = SqlConnect(request.user.username)
+        sc.hide_post(post_id)
+        return HttpResponse('ok')
 
 
 def mod_ref(request, jdata):

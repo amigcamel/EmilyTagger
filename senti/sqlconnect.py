@@ -19,7 +19,7 @@ class SqlConnect:
 
     def __del__(self):
         self._conn.close()
-        logger.debug('Connection closed')
+        # logger.debug('Connection closed')
 
     def exec(self, cmd, *args):
         self._c.execute(cmd, *args)
@@ -29,16 +29,36 @@ class SqlConnect:
         return self._c.fetchall()
 
     def create_tables(self):
-        self.exec('''CREATE TABLE posts (post_id text primary key, page integer, source text, category text, post text)''')
-        self.exec('''CREATE TABLE tags (id integer primary key, schema text)''')
+        self.exec('''CREATE TABLE posts (post_id TEXT PRIMARY KEY, page INTEGER, source TEXT, category TEXT, post TEXT)''')
+        self.exec('''CREATE TABLE tags (id INTEGER PRIMARY KEY, schema TEXT)''')
 
     def create_sample_tags(self):
         with open(settings.TAG_PATH) as f:
             ref = f.read()
         self.exec('''INSERT INTO tags VALUES (1, '%s')''' % ref)
 
-    def insert_post(self, post_id, page, source, category, post):
+    def insert_post(self, post_id, source, category, post):
         if len(post.strip()) == 0:
             logger.warning('empty input!')
         else:
+            page = self.fetch('''SELECT MAX(page) FROM posts''')[0][0]
+            if page is None:
+                page = 1
+            else:
+                page += 1
             self.exec('''INSERT INTO posts VALUES (?, ?, ?, ?, ?)''', (post_id, page, source, category, post))
+
+    def hide_post(self, post_id):
+        self.exec('''UPDATE posts SET page=-1 WHERE (post_id=?)''', (post_id, ))
+        logger.debug('Post hid: %s' % post_id)
+        self.reorder()
+
+    def delete_all_posts(self):
+        self.exec('''DELETE FROM posts''')
+
+    def reorder(self):
+        pages = self.fetch('''SELECT page FROM posts WHERE (page!=-1)''')
+        pages = sorted(i[0] for i in pages)
+        for num, page in enumerate(pages, 1):
+            self.exec('''UPDATE posts SET page=? WHERE (page=?)''', (num, page))
+        logger.debug('Done reordering')

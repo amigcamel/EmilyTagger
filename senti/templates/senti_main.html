@@ -45,7 +45,7 @@ LOPE Annotator
             <br>
             <div id="cand_text" data-intro="選取要標記的字串後，標記選項即會跳出"></div>
             <br> 
-            <button class="btn btn-danger">刪除此文</button>
+            <button id="hidePost" class="btn btn-danger">刪除此文</button>
         </div>
         <div class="col-md-6">
             <div id='cat-box' data-intro="這裡顯示您已標記的字串，在該字串上點兩下即可刪除"></div>
@@ -187,17 +187,15 @@ LOPE Annotator
             load_cand_text(cand_text);
 
             if (last_open_page == 1) {
-                $('.page-nav').filter(function() {
-                    return $(this).attr('data-val') == -1;
-                }).hide();
+                $('.page-nav[data-val="-1"]').hide();
+                $('.page-nav[data-val="1"]').show();
             }
-            else if (last_open_page > 1 && last_open_page <= total_page) {
+            if (last_open_page == total_page) {
+                $('.page-nav[data-val="1"]').hide();
+                $('.page-nav[data-val="-1"]').show();
+            }
+            else if (last_open_page > 1 && last_open_page < total_page) {
                 $('.page-nav').show();
-            }
-            else if (last_open_page > total_page ) {
-                $('.page-nav').filter(function() {
-                    return $(this).attr('data-val') == 1;
-                }).hide();   
             }
 
             get_ref(tag);
@@ -355,6 +353,18 @@ LOPE Annotator
         $("#goToPage").val(this.value.match(/[0-9]*/));
     });
 
+    {# hide post #}
+    $('#hidePost').click(function() {
+        var data = {post_id: text_id, csrfmiddlewaretoken: '{{csrf_token}}'};
+        $.post('{% url "hide_post" %}', data, function(response) {
+            if (response === 'ok') {
+                if (confirm('確定刪除?')) {
+                    $.removeCookie('last_open_page', null, {path: '/'});
+                    location.reload();
+                }
+            }
+        });
+    });
 
     $(function() {
         $.get('{% url "get_total_page" %}', function(data) {
