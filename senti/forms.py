@@ -32,10 +32,10 @@ class UploadTextForm(forms.Form):
 
 
 class PasteTextForm(forms.Form):
-    post = forms.CharField(required=False, label=(''), widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 20}))
-    title = forms.CharField(required=False, label=('標題'), widget=forms.TextInput(attrs={'class': 'form-control'}))
-    source = forms.CharField(required=False, label=('來源'), widget=forms.TextInput(attrs={'class': 'form-control'}))
-    category = forms.CharField(required=False, label=('分類'), widget=forms.TextInput(attrs={'class': 'form-control'}))
+    post = forms.CharField(required=False, label=(''), widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 20, 'required': 'required'}))
+    title = forms.CharField(required=False, label=('標題'), widget=forms.TextInput(attrs={'class': 'form-control', 'required': 'required'}))
+    source = forms.CharField(required=False, label=('來源'), widget=forms.TextInput(attrs={'class': 'form-control', 'required': 'required'}))
+    category = forms.CharField(required=False, label=('分類'), widget=forms.TextInput(attrs={'class': 'form-control', 'required': 'required'}))
 
 
 class ModifyTagForm(forms.Form):
