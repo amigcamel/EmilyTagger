@@ -13,7 +13,7 @@ if __name__ == "__main__":
     sc = SqlConnect('guest@guest.com')
     sc.create_tables()
     sc.create_sample_tags()
-    sc.insert_post(u'''
+    sc.insert_post('ann-title', 'ann-source', 'ann-cat', u'''
         Hi,
         歡迎使用 LOPE Annotator!
         註冊後，即可上傳自己的文章，已經編輯個人標記。
