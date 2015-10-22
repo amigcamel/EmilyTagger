@@ -47,7 +47,7 @@
     <div class="wrapper">
         <header class="main-header">
             <!-- Logo -->
-             <a class="logo" href='{% url "home" %}'>
+             <a class="logo" href='{% url "index" %}'>
             <!-- mini logo for sidebar mini 50x50 pixels -->
              <span class="logo-mini"><b>L</b>PT</span> 
             <!-- logo for regular state and mobile devices -->
@@ -60,9 +60,11 @@
                 navigation</span></a>
                 <div class="navbar-custom-menu">
                     <ul class="nav navbar-nav">
-                        <li>
-                            <a href="#signup" data-toggle="modal" data-target="#accountModal">登入/註冊</a>
-                        </li>
+                        {% if not user.is_authenticated %}
+                            <li>
+                                <a href="#signup" data-toggle="modal" data-target="#accountModal">登入/註冊</a>
+                            </li>
+                        {% endif %}
                         <!-- User Account: style can be found in dropdown.less -->
                         <li class="dropdown user user-menu">
                             <a class="dropdown-toggle" data-toggle="dropdown" href="#"><img alt="User Image" class="user-image" src='http://lopen.linguistics.ntu.edu.tw/assets/icon/logo.jpg'> <span class="hidden-xs">{{ user.get_username }}</span></a>
@@ -74,25 +76,10 @@
                                     <p>{{ user.get_username }}
                                     <small>Member since Nov. 2012</small></p>
                                 </li><!-- Menu Body -->
-                                <li class="user-body">
-                                    <div class="col-xs-4 text-center">
-                                        <a href="#">Followers</a>
-                                    </div>
-                                    <div class="col-xs-4 text-center">
-                                        <a href="#">Sales</a>
-                                    </div>
-                                    <div class="col-xs-4 text-center">
-                                        <a href="#">Friends</a>
-                                    </div>
-                                </li><!-- Menu Footer-->
                                 <li class="user-footer">
-                                    <div class="pull-left">
-                                        <a class="btn btn-default btn-flat"
-                                        href="#">Profile</a>
-                                    </div>
                                     <div class="pull-right">
                                         <a class="btn btn-default btn-flat"
-                                        href="#">Sign out</a>
+                                        href='{% url "signout" %}'>登出</a>
                                     </div>
                                 </li>
                             </ul>
@@ -130,8 +117,15 @@
                 <!-- sidebar menu: : style can be found in sidebar.less -->
                 <ul class="sidebar-menu">
                     <li class="header">MAIN NAVIGATION</li>
-                    <li>
-                        <a href="#"><i class="fa fa-dashboard"></i> <span>標記工具</span></a>
+                    <li class="treeview">
+                        <a href="#">
+                            <i class="fa fa-wrench"></i> <span>標記系統</span> <i class="fa fa-angle-left pull-right"></i>
+                        </a>
+                        <ul class="treeview-menu" style="display: none;">
+                            <li><a href='{% url "upload_text" %}'><i class="fa fa-upload"></i> 上傳文本</a></li>
+                            <li><a href='{% url "paste_text" %}'><i class="fa fa-paste"></i> 貼上文本</a></li>
+                            <li><a href="#"><i class="fa fa-cog"></i> 設定</a></li>
+                        </ul>
                     </li>
                     <li>
                         <a href="#"><i class="fa fa-line-chart"></i> <span>標記分佈</span></a>
@@ -142,6 +136,12 @@
                     <li>
                         <a href="#"><i class="fa fa-pie-chart"></i> <span>詞頻分佈</span></a>
                     </li>
+                    <li>
+                        <a href="#"><i class="fa fa-pie-chart"></i> <span>詞頻分佈</span></a>
+                    </li>
+                    <li>
+                        <a href='{% url "download" %}'><i class="fa fa-download"></i> <span>下載</span></a>
+                    </li>
                 </ul>
             </section><!-- /.sidebar -->
         </aside><!-- Content Wrapper. Contains page content -->
@@ -151,7 +151,7 @@
                 <h1>{% block page_name %}{% endblock %} <small>{% block page_subname %}{% endblock %}</small></h1>
                 <ol class="breadcrumb">
                     <li>
-                        <a href='{% url "home" %}'><i class="fa fa-dashboard"></i> 首頁</a>
+                        <a href='{% url "index" %}'><i class="fa fa-dashboard"></i> 首頁</a>
                     </li>
                     <li class="active">{% block breadcrumb %}{% endblock %}</li>
                 </ol>

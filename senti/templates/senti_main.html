@@ -19,12 +19,14 @@
         {% endcomment %}
     
         <div class="row">
+            {% comment %}
             <div class="col-lg-4">
                 <button class="btn btn-primary" data-toggle="modal" data-target="#distPie" data-intro="檢視當前用戶目前的標記分佈">標記分佈</button>
                 <button class="btn btn-primary" data-toggle="modal" data-target="#postDist">標記狀態</button>
                 <button class="btn btn-primary" data-toggle="modal" data-target="#freqDist">詞頻分佈</button>
             </div>
-            <div class="col-lg-5" style="padding-top:10px;">
+            {% endcomment %}
+            <div class="col-lg-12" style="padding-top:10px;">
                 <span>字體大小</span>
                 <div id="font-slider"></div>
             </div>

@@ -1,6 +1,7 @@
 # -*-coding:utf-8-*-
+from django.shortcuts import resolve_url
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
 from senti.sqlconnect import SqlConnect
@@ -24,11 +25,8 @@ def signin(request):
 
 
 def signout(request):
-    if request.method == 'POST':
-        logout(request)
-        return HttpResponse('OK')
-    else:
-        raise PermissionDenied()
+    logout(request)
+    return HttpResponseRedirect(resolve_url('index'))
 
 
 def register(request):

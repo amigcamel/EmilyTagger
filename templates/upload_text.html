@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+
+    <form action="." method="post" enctype="multipart/form-data">{% csrf_token %}
+        {{upload_text_form.as_p}}
+        <input class="btn btn-default" type="submit" name="uploadFile" value="上傳" />
+    </form>
+
+{% endblock main_content %}
