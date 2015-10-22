@@ -39,6 +39,7 @@ INSTALLED_APPS = (
 INSTALLED_APPS_LOCAL = (
     'senti',
     'account',
+    'home',
 )
 
 INSTALLED_APPS += INSTALLED_APPS_LOCAL
