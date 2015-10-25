@@ -69,5 +69,14 @@ class SqlConnect:
     def pack_source_text(cls, username):
         client = cls(username)
         res = client.fetch(''' SELECT post FROM posts ''')
-        posts = [i[0].decode('utf-8') for i in res]
+        posts = []
+        for i in res:
+            post = i[0]
+            # the following part is only a workaround
+            # need more debugging!
+            try:
+                post = post.decode('utf-8')
+            except:
+                pass
+            posts.append(post)
         return posts
