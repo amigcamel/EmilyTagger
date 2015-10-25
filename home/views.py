@@ -1,8 +1,13 @@
 from django.shortcuts import render_to_response, resolve_url
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.template import RequestContext
 from .forms import PasteTextForm, UploadTextForm
 from .sqlconnect import SqlConnect
+from .rlite_api import DB_Conn
+from datetime import datetime
+import os
+from zipfile import ZipFile
+import shutil
 import logging
 logger = logging.getLogger(__name__)
 
@@ -12,6 +17,47 @@ logger = logging.getLogger(__name__)
 #         'home.html',
 #         context_instance=RequestContext(request)
 #     )
+
+def download_source_text(request):
+
+    def add_zip_flat(zip, filename):
+        # avoid including absolute path; ref: http://stackoverflow.com/a/16104667/1105489
+        dir, base_filename = os.path.split(filename)
+        os.chdir(dir)
+        zip.write(base_filename)
+
+    user = request.user.username
+    tmp_path = '/tmp/' + user
+    if not os.path.isdir(tmp_path):
+        os.mkdir(tmp_path)
+    posts = SqlConnect.pack_source_text(user)
+    text_paths = []
+    zip_path = '/tmp/%s.zip' % user
+    for num, post in enumerate(posts, 1):
+        text_path = tmp_path + '/%d.txt' % num
+        text_paths.append(text_path)
+        with open(text_path, 'w') as f:
+            f.write(post)
+    with ZipFile(zip_path, 'w') as z:
+        for p in text_paths:
+            add_zip_flat(z, p)
+    shutil.rmtree(tmp_path)
+
+    # django download file
+    # ref: http://stackoverflow.com/a/909088/1105489
+    f = open(zip_path, 'rb')  # must set mode to "rb"; "r" won't work
+    resp = HttpResponse(f, content_type='application/zip')
+    resp['Content-Disposition'] = 'attachment; filename=source.zip'
+    f.close()
+    os.remove(zip_path)
+    return resp
+
+
+def download_tagged_words(request):
+    res = DB_Conn.pack_tagged_words(request.user.username)
+    resp = HttpResponse(res, content_type='application.json')
+    resp['Content-Disposition'] = 'attachment; filename=tagged_words.json'
+    return resp
 
 
 def download(request):
@@ -36,6 +82,7 @@ def upload_text(request):
                 text = f.read()
                 logger.debug(text)
                 r['post'] = text
+                r['post_id'] = str(datetime.now())
                 sc = SqlConnect(request.user.username)
                 sc.insert_post(**r)
             return HttpResponseRedirect(resolve_url('index'))
@@ -58,6 +105,7 @@ def paste_text(request):
         r.pop('pasteText')
         logger.info(r)
         if len(r.get('post').strip()) != 0:
+            r['post_id'] = str(datetime.now())
             sc = SqlConnect(request.user.username)
             sc.insert_post(**r)
             return HttpResponseRedirect(resolve_url('index'))

@@ -9,8 +9,8 @@
         </div><!-- /.box-header -->
         <div class="box-body">
             <p>將上傳的文章打包帶走</p>
-            <a class="btn btn-primary" href="http://almsaeedstudio.com/download/AdminLTE-dist"><i class=
-            "fa fa-download"></i> CSV</a>
+            <a class="btn btn-primary" href='{% url "download_source_text" %}'><i class=
+            "fa fa-download"></i> ZIP</a>
         </div><!-- /.box-body -->
     </div><!-- /.box -->
 </div>
@@ -23,8 +23,8 @@
         </div><!-- /.box-header -->
         <div class="box-body">
             <p>將成果打包帶走</p>
-            <a class="btn btn-info" href="http://almsaeedstudio.com/download/AdminLTE-dist"><i class=
-            "fa fa-download"></i> CSV</a>
+            <a class="btn btn-info" href='{% url "download_tagged_words" %}'><i class=
+            "fa fa-download"></i> JSON</a>
         </div><!-- /.box-body -->
     </div><!-- /.box -->
 </div>

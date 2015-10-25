@@ -4,6 +4,8 @@ import simplejson as json
 from django.conf import settings
 from os.path import join
 from itertools import chain
+from .sqlconnect import SqlConnect
+from itertools import groupby
 import logging
 logger = logging.getLogger(__name__)
 
@@ -85,7 +87,24 @@ class DB_Conn:
     def pack_tagged_words(cls, username):
         client = cls(username)
         keys = client.db.command('keys', '*')
-        return keys
+        sql_client = SqlConnect(username)
+        res = sql_client.fetch(''' SELECT * FROM tags ''')[0][1]
+        ref = json.loads(res)
+        ref_dic = {}
+        for v in ref.values():
+            ref_dic.update(v)
+        pairs = [(key.decode('utf8').split('__')[-1], json.loads(client.db.command('get', key))) for key in keys]
+        pairs.sort(key=lambda x: x[0])
+        output = {}
+        for k, g in groupby(pairs, lambda x: x[0]):
+            dic = {}
+            for gg in g:
+                d = gg[1]
+                for kk, vv in d.items():
+                    dic[kk] = ref_dic[k][vv][0]
+            output[k] = dic
+        output = json.dumps(output)
+        return output
 
 
 def update(cue, value, text_id, tag, subtag, user):

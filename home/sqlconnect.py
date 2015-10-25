@@ -38,7 +38,7 @@ class SqlConnect:
             ref = f.read()
         self.exec('''INSERT INTO tags VALUES (1, '%s')''' % ref)
 
-    def insert_post(self, title, source, category, post):
+    def insert_post(self, title, source, category, post, post_id):
         if len(post.strip()) == 0:
             logger.warning('empty input!')
         else:
@@ -48,7 +48,6 @@ class SqlConnect:
             else:
                 page += 1
             now = datetime.now().replace(microsecond=0)
-            post_id = str(now.timestamp())
             self.exec('''INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?, ?)''', (post_id, page, title, source, category, post, str(now)))
 
     def hide_post(self, post_id):
@@ -65,3 +64,10 @@ class SqlConnect:
         for num, page in enumerate(pages, 1):
             self.exec('''UPDATE posts SET page=? WHERE (page=?)''', (num, page))
         logger.debug('Done reordering')
+
+    @classmethod
+    def pack_source_text(cls, username):
+        client = cls(username)
+        res = client.fetch(''' SELECT post FROM posts ''')
+        posts = [i[0].decode('utf-8') for i in res]
+        return posts
