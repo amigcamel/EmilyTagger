@@ -5,7 +5,7 @@ import os
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
-    from senti.sqlconnect import SqlConnect
+    from annotator.sqlconnect import SqlConnect
 
     os.mkdir('dbs')
     os.mkdir('user_dbs')

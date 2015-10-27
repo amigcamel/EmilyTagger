@@ -3,7 +3,7 @@ import sys
 sys.path.append('..')
 
 import sqlite3
-from senti.rlite_api import DB_Conn
+from annotator.rlite_api import DB_Conn
 from itertools import chain, groupby
 from collections import Counter, OrderedDict, defaultdict
 from converter import to_csv, to_excel

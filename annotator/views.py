@@ -60,14 +60,14 @@ def main(request):
         modify_tag_form = ModifyTagForm(initial={'tag_schema': ref})
         paste_text_form = PasteTextForm()
     return render_to_response(
-            'senti_main.html',
-            {
-                'upload_text_form': upload_text_form,
-                'modify_tag_form': modify_tag_form,
-                'paste_text_form': paste_text_form
-            },
-            context_instance=RequestContext(request)
-        )
+        'senti_main.html',
+        {
+            'upload_text_form': upload_text_form,
+            'modify_tag_form': modify_tag_form,
+            'paste_text_form': paste_text_form
+        },
+        context_instance=RequestContext(request)
+    )
 
 
 def get_cand_text(request):
@@ -166,15 +166,15 @@ def get_post_dist(request, subtag):
     from .rlite_api import DB_Conn
     from itertools import groupby, chain
     sc = SqlConnect(request.user.username)
-    res = sc.fetch('select id, source, senti, url from posts')
+    res = sc.fetch('select post_id, source, category, upload_time from posts')
     res = [list(i) for i in res]
 
     dbconn = DB_Conn(request.user.username)
 
     con = []
     tag_res_con = []
-    for id, source, senti, url in res:
-        uid = '%s__%s' % (url, subtag)
+    for id, source, category, upload_time in res:
+        uid = '%s__%s' % (upload_time, subtag)
         tag_res = dbconn.read(uid)
         if tag_res:
             con.append(1)
@@ -192,6 +192,8 @@ def get_post_dist(request, subtag):
     for k, g in groupby(res, lambda x: x[2]):
         groups.append(list(g))
         uniquekeys.append(k)
+    print(groups)
+    raise
     dist = [('%d~%d' % (i[0][0], i[-1][0]), i[0][1], i[0][2], sum(ii[4] for ii in i), len(dict(chain.from_iterable(ii[5].items() for ii in i)))) for i in groups]
     return HttpResponse(json.dumps(dist))
 
@@ -206,7 +208,7 @@ def get_freq_dist(request, subtag='Emotion'):
     post_range_con = []
     for post_range, source, senti, tagged_num, type_num in dist:
         post_start, post_end = post_range.split('~')
-        post_range = range(int(post_start), int(post_end)+1)
+        post_range = range(int(post_start), int(post_end) + 1)
         post_range_con.append(post_range)
 
     sc = SqlConnect(request.user.username)
@@ -219,7 +221,7 @@ def get_freq_dist(request, subtag='Emotion'):
     for post_range in post_range_con:
         words = []
         for p in post_range:
-            uid = '%s__%s' % (res[p-1][3], subtag)
+            uid = '%s__%s' % (res[p - 1][3], subtag)
             kv = dbconn.read(uid)
             words += kv.keys()
             words_con += kv.keys()

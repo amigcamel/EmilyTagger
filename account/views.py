@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
-from senti.sqlconnect import SqlConnect
+from annotator.sqlconnect import SqlConnect
 
 
 def signin(request):

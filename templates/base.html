@@ -128,16 +128,13 @@
                         </ul>
                     </li>
                     <li>
-                        <a href="#"><i class="fa fa-line-chart"></i> <span>標記分佈</span></a>
+                        <a href='{% url "tagdist" %}'><i class="fa fa-line-chart"></i> <span>標記分佈</span></a>
                     </li>
                     <li>
-                        <a href="#"><i class="fa fa-bar-chart"></i> <span>標記狀態</span></a>
+                        <a href='{% url "worddist" %}'><i class="fa fa-pie-chart"></i> <span>詞頻分佈</span></a>
                     </li>
                     <li>
-                        <a href="#"><i class="fa fa-pie-chart"></i> <span>詞頻分佈</span></a>
-                    </li>
-                    <li>
-                        <a href="#"><i class="fa fa-pie-chart"></i> <span>詞頻分佈</span></a>
+                        <a href='{% url "tagstat" %}'><i class="fa fa-bar-chart"></i> <span>標記狀態</span></a>
                     </li>
                     <li>
                         <a href='{% url "download" %}'><i class="fa fa-download"></i> <span>下載</span></a>

@@ -37,9 +37,10 @@ INSTALLED_APPS = (
 )
 
 INSTALLED_APPS_LOCAL = (
-    'senti',
+    'annotator',
+    'utility',
+    'analysis',
     'account',
-    'home',
 )
 
 INSTALLED_APPS += INSTALLED_APPS_LOCAL

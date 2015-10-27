@@ -12,6 +12,8 @@
 		$(function () {
 		    $('#h_tagdist').highcharts({
 		        chart: {
+			    	backgroundColor: null,
+			    	credits: false,
 		            type: 'pie',
 		            options3d: {
 		                enabled: true,
@@ -20,7 +22,7 @@
 		            }
 		        },
 		        title: {
-		            text: 'Browser market shares at a specific website, 2014'
+		            text: '已標記詞之分佈'
 		        },
 		        tooltip: {
 		            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -38,19 +40,18 @@
 		        },
 		        series: [{
 		            type: 'pie',
-		            name: 'Browser share',
+		            name: '佔所有類別',
 		            data: [
-		                ['Firefox', 45.0],
-		                ['IE', 26.8],
+		                ['類別一', 45.0],
+		                ['類別四', 26.8],
 		                {
-		                    name: 'Chrome',
+		                    name: '類別一',
 		                    y: 12.8,
 		                    sliced: true,
 		                    selected: true
 		                },
-		                ['Safari', 8.5],
-		                ['Opera', 6.2],
-		                ['Others', 0.7]
+		                ['類別二', 8.5],
+		                ['類別三', 6.9],
 		            ]
 		        }]
 		    });
