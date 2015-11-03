@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block main_content %}
+	<div class="row">
+		<div class="col-lg-6">
+			<div class="box box-default">
+				<div class="box-header with-border">
+					<h3 class="box-title">類別</h3>
+					<div class="box-tools pull-right">
+						<button type="button" class="btn btn-box-tool" data-widget="collapse">
+							<i class="fa fa-minus"></i>
+						</button>
+					</div>
+				</div>
+				<div class="box-body box-tag">
+					<a class="label label-default">標籤</a>
+					<a class="label label-default">標籤</a>
+					<a class="label label-default">標籤</a>
+					<a class="label label-default label-tag-plus"><i class="fa fa-plus"></i></a>
+				</div>    
+			</div>
+		</div>
+	</div>
+
+	<div class="pull-right">
+		<button id="btn-save" class="btn btn-danger">儲存</button>
+		<button class="btn btn-info">取消</button>
+	</div>
+	{# context menu body #}
+	<div id="context-menu">
+		<ul class="dropdown-menu" role="menu">
+			<li><a src="#" class="del-tag">刪除</a></li>
+			<li><a src="#" class="">更改文字</a></li>
+		</ul>
+	</div>
+
+{% endblock main_content %}
+
+{% block extra_css %}
+    <link href='{% static "colorpicker/css/bootstrap-colorpicker.min.css" %}' rel=
+    "stylesheet">
+	<style type="text/css">
+	.box-tag {
+		line-height: 40px;
+	}
+	.box-tag > .label {
+		font-size: 20px;
+		background: white;
+		border-style: dotted;
+		border-width: 1px;
+	}
+	.box-tag > a.label:hover {
+		color: inherit;
+	}
+	</style>
+{% endblock extra_css %}
+
+
+{% block extra_js %}
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap3-dialog/1.34.6/js/bootstrap-dialog.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-contextmenu/0.3.3/bootstrap-contextmenu.min.js"></script>
+	<script src='{% static "colorpicker/js/bootstrap-colorpicker.min.js" %}'></script>
+	<script>
+		// context menu
+	    function initContextMenu() {    	
+		    $('.label:not(".label-tag-plus"),.box-title').contextmenu({
+		    	target: '#context-menu',
+		    	onItem: function(context, e) {
+		    		action = $(e.target).text();
+		    		if (action == '刪除') {
+		    			if ($(context).hasClass('box-title')) {
+		    				alert('「類別名稱」無法刪除！')
+		    			} else {
+				    		$(context).remove();
+		    			}
+		    		} else if (action == '更改文字') {
+		    			val = $(context).text();
+				        BootstrapDialog.confirm({
+				            title: '更改文字',
+				            message: '標籤名稱: <input type="text" id="chg-tag" class="form-control">',
+				            type: BootstrapDialog.TYPE_WARNING,
+				            closable: false,
+				            draggable: true,
+				            btnCancelLabel: '取消',
+				            btnOKLabel: '確認',
+				            btnOKClass: 'btn-warning',
+				            callback: function(result) {
+				                if(result) {
+				                	val = $.trim($('#chg-tag').val());
+				                	if (val) {
+					                    $(context).html(val);
+				                	}
+				                }
+				            }
+				        });
+		    		}
+		    	}
+		    })
+	    }
+		// color picker
+	    $('.label:not(".label-tag-plus")').colorpicker().on('changeColor', function(ev) {
+			color = ev.color.toHex();
+			$(this).css('background-color', color)
+	    });
+
+	    // add tag
+	    $('.label-tag-plus').click(function() {
+	    	$('<a class="label label-default">標籤</a>').insertBefore($(this));
+	    	initContextMenu();
+	    });
+
+	    // save personal settings
+	    $('#btn-save').click(function() {
+	    	box_con = [];
+	    	$('.box').each(function(){
+	    		cat = $(this).find('.box-title').text();
+	    		tags = $(this).find('.label:not(".label-tag-plus")');
+	    		con = [];
+	    		$(tags).each(function() {
+	    			tag = $(this).text();
+	    			color = $(this).css('background-color');
+	    			con.push([tag, color]);
+	    		});
+		    	box_con.push({cat: cat, tags: con})
+	    	});
+	    	output = JSON.stringify(box_con);
+	    	alert(output);
+	    });
+
+	    // initiate contextmenu
+	    initContextMenu();
+	</script>
+{% endblock extra_js %}

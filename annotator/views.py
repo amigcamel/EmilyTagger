@@ -145,7 +145,7 @@ def mod_ref(request, jdata):
     try:
         json.loads(jdata)
         sc = SqlConnect(request.user.username)
-        sc.exec('''UPDATE tags SET schema=?''', (jdata, ))
+        sc.exec_('''UPDATE tags SET schema=?''', (jdata, ))
     except:
         logger.warning('invalid json format')
 

@@ -122,6 +122,13 @@ def paste_text(request):
     )
 
 
+def personal_settings(request):
+    return render_to_response(
+        'personal_settings.html',
+        context_instance=RequestContext(request),
+    )
+
+
 def request_parser(request):
     if request.method == 'POST':
         req = request.POST
