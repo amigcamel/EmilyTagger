@@ -5,7 +5,7 @@
 <head>
     <meta charset="utf-8">
     <meta content="IE=edge" http-equiv="X-UA-Compatible">
-    <title>Lopotator |</title>
+    <title>Lopotator</title>
     <!-- Tell the browser to be responsive to screen width -->
     <meta content=
     "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
@@ -42,6 +42,10 @@
     <![endif]-->
     {% block extra_css %}
     {% endblock extra_css %}
+
+    <script src='{% static "plugins/jQuery/jQuery-2.1.4.min.js" %}'></script>
+    {% block head_js %}
+    {% endblock head_js %}
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
     <div class="wrapper">
@@ -117,7 +121,7 @@
                 <!-- sidebar menu: : style can be found in sidebar.less -->
                 <ul class="sidebar-menu">
                     <li class="header">MAIN NAVIGATION</li>
-                    <li class="treeview">
+                    <li class="treeviews">
                         <a href="#">
                             <i class="fa fa-wrench"></i> <span>標記系統</span> <i class="fa fa-angle-left pull-right"></i>
                         </a>
@@ -318,12 +322,7 @@
 
     {% include 'account.html' %}
     
-    <!-- jQuery 2.1.4 -->
-    <script src='{% static "plugins/jQuery/jQuery-2.1.4.min.js" %}'>
-    </script> <!-- jQuery UI 1.11.4 -->
-     
-    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js">
-    </script> 
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script> 
     <!-- Resolve conflict in jQuery UI tooltip with Bootstrap tooltip -->
      
     <script>

@@ -84,6 +84,29 @@ class DB_Conn:
         return words
 
     @classmethod
+    def update_tag_settings(cls, **kw):
+        tag_settings = kw['tag_settings']
+        user = kw['user']
+        client = cls(user)
+        client.command('set', 'tag_settings', tag_settings)
+        return 1
+
+    @classmethod
+    def get_tag_settings(cls, **kw):
+        user = kw['user']
+        client = cls(user)
+        res = client.command('get', 'tag_settings')
+        try:
+            ts = json.loads(res)
+            if not isinstance(ts, list):
+                tag_settings = '[]'
+            else:
+                tag_settings = res
+        except:
+            tag_settings = '[]'
+        return tag_settings
+
+    @classmethod
     def pack_tagged_words(cls, username):
         client = cls(username)
         keys = client.db.command('keys', '*')

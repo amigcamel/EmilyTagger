@@ -11,6 +11,7 @@ urlpatterns = patterns(
     url('^lope.anno/upload_text/$', 'utility.views.upload_text', name='upload_text'),
     url('^lope.anno/paste_text/$', 'utility.views.paste_text', name='paste_text'),
     url('^lope.anno/personal_settings/$', 'utility.views.personal_settings', name='personal_settings'),
+    url('^lope.anno/controls/$', 'utility.views.controls', name='controls'),
 
     url('^lope.anno/', include('annotator.urls')),
     url('^lope.anno/analysis/', include('analysis.urls')),

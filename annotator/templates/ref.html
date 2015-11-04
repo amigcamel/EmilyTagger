@@ -38,8 +38,32 @@
         </div>
     </script>
 
+    <script id="template-tag_settings" type="text/x-handlebars-template">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                標記設定
+            </div>
+            <div class="panel-footer">
+                <div class="btn-group">
+                    {{#each objects}}
+                        <button type="button" class="btn btn-default tag-type">{{this.cat}}</button>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+    </script>
+
     <script>
+    tag_settings = null;
     function get_ref(subtag) {
+        // render tag_settings
+        var source = $('#template-tag_settings').html(),
+            template = Handlebars.compile(source);
+        $.post('/lope.anno/controls/', {command: 'get_tag_settings'}, function(resp) {
+            tag_settings = JSON.parse(resp);
+            $('#hb-tag_settings').html(template({objects: tag_settings}));
+        });
+
 
         var catSource   = $("#cat-template").html();
         var catTemplate = Handlebars.compile(catSource);

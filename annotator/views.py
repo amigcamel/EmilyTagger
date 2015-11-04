@@ -1,11 +1,10 @@
 # -*-coding:utf-8-*-
-from django.shortcuts import render_to_response, resolve_url
-from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import render_to_response
+from django.http import HttpResponse
 from django.template import RequestContext
 from django.conf import settings
 from .rlite_api import update, read_pairs, remove_cue
 from .func import gen_tag_dist
-from .forms import UploadTextForm, ModifyTagForm, PasteTextForm
 from .sqlconnect import SqlConnect
 import simplejson as json
 
@@ -18,54 +17,9 @@ DB_PATH = settings.DATABASES['default']['NAME']
 
 
 def main(request):
-    if request.method == 'POST':
-        upload_text_form = UploadTextForm(request.POST, request.FILES)
-        modify_tag_form = ModifyTagForm(request.POST)
-        paste_text_form = PasteTextForm(request.POST)
-        # if request.FILES:
-        query_dict = request.POST
-        if 'uploadFile' in query_dict:
-            # logger.info(request.FILES['upload_file'].name)
-            files = request.FILES.getlist('upload_file')
-            for f in files:
-                logger.debug(f.name)
-                text = f.read()
-                logger.debug(text)
-                sc = SqlConnect(request.user.username)
-                sc.insert_post(text)
-            return HttpResponseRedirect(resolve_url('index'))
-
-        elif 'pasteText' in query_dict:
-            r = request_parser(request)
-            r.pop('pasteText')
-            logger.info(r)
-            if len(r.get('post').strip()) != 0:
-                sc = SqlConnect(request.user.username)
-                sc.insert_post(**r)
-                return HttpResponseRedirect(resolve_url('index'))
-
-        elif 'modifyTag' in query_dict:
-            res = query_dict.get('tag_schema')
-            logger.info(res)
-            if len(res.strip()) != 0:
-                mod_ref(request, res)
-                return HttpResponseRedirect(resolve_url('index'))
-
-    else:
-        upload_text_form = UploadTextForm()
-        logger.info(request.user.username)
-        sc = SqlConnect(request.user.username)
-        res = sc.fetch('''SELECT schema FROM tags WHERE (id=1)''')
-        ref = res[0][0]
-        modify_tag_form = ModifyTagForm(initial={'tag_schema': ref})
-        paste_text_form = PasteTextForm()
+    logger.info(request.user.username)
     return render_to_response(
         'senti_main.html',
-        {
-            'upload_text_form': upload_text_form,
-            'modify_tag_form': modify_tag_form,
-            'paste_text_form': paste_text_form
-        },
         context_instance=RequestContext(request)
     )
 

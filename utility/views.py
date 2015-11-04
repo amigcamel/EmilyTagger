@@ -1,3 +1,5 @@
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponseForbidden
 from django.shortcuts import render_to_response, resolve_url
 from django.http import HttpResponseRedirect, HttpResponse
 from django.template import RequestContext
@@ -123,8 +125,12 @@ def paste_text(request):
 
 
 def personal_settings(request):
+    kw = {}
+    kw['user'] = request.user.username
+    tag_settings = DB_Conn.get_tag_settings(**kw)
     return render_to_response(
         'personal_settings.html',
+        {'tag_settings': tag_settings},
         context_instance=RequestContext(request),
     )
 
@@ -138,3 +144,22 @@ def request_parser(request):
     req = req.copy().dict()
     req.pop('csrfmiddlewaretoken')
     return req
+
+
+@csrf_exempt
+def controls(request):
+    if request.method == 'POST':
+        post_data = request.POST.copy()
+        kw = dict()
+        for k, v in post_data.items():
+            kw[k] = v
+        kw['user'] = request.user.username
+        cmd = kw.pop('command')
+        res = globals()[cmd](**kw)
+        return HttpResponse(res)
+
+    return HttpResponseForbidden()
+
+
+update_tag_settings = DB_Conn.update_tag_settings
+get_tag_settings = DB_Conn.get_tag_settings
