@@ -81,10 +81,7 @@
         <hr>
         <div id="options"></div>
     </div>
-    {% include 'jqPlot.html' %}
-    {% include 'postDist.html' %}
-    {% include 'freqDist.html' %}
-    {% include 'post_list_modal.html' %}
+
 {% endblock main_content %}
 
 {% block extra_js %}
@@ -247,8 +244,6 @@
             $.post('{% url "api" %}', data, function(res) {
                 if (res == 'ok') {
                     $('.featherlight-close').click();
-
-                    // $('#cat-'+value).append('<span class="draggable label">'+cue+'</span> ');
                     senti_main(last_open_page);
                 }
                 else {
@@ -266,12 +261,6 @@
             $.each(Object.keys(_ref), function(index, value) {
                 obj = _ref[value];
                 $.extend(ref, obj);
-
-            // tag-panel
-            var source = $('#tag-panel').html();
-            var template = Handlebars.compile(source);
-
-            $('#tag-panel-wrapper').html(template(_ref));
 
             $('.tag-type').click(function() {
                 tagType = $(this).text();
