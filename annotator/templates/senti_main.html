@@ -39,26 +39,11 @@
     <div id="hb-tag_settings"></div>
     <div class="row _main">
         <div class="col-md-6">
-            <div class="row">
-                <div class="col-md-2">
-                    <button class="btn btn-default btn-sm page-nav" data-val='-1'><span class="glyphicon glyphicon-chevron-left"></span></button>
-                </div>
-                <div class="col-md-8">
-                    <div class="input-group input-group-sm"><span class="input-group-btn"><button class="btn btn-default btn-sm" data-toggle="modal" data-target="#postListModal"><span class="glyphicon glyphicon-search"></span>
-                        </button>
-                        </span>
-                        <input type="number" class="form-control" id="goToPage" placeholder="" data-intro="直接輸入到達指定頁碼">
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-default btn-sm page-nav" data-val='1' style="float:right"><span class="glyphicon glyphicon-chevron-right"></span></button>
-                </div>
-            </div>
             <div class="clearfix"></div>
-            <br>
+            <div id="paginator"></div>
             <div id="cand_text" data-intro="選取要標記的字串後，標記選項即會跳出"></div>
             <br> 
-            <button id="hidePost" class="btn btn-danger">刪除此文</button>
+            <button id="hidePost" class="btn btn-danger" disabled="disabled">刪除此文</button>
         </div>
         <div class="col-md-6">
             <div id='cat-box' data-intro="這裡顯示您已標記的字串，在該字串上點兩下即可刪除"></div>
@@ -68,9 +53,7 @@
                 <span class="glyphicon glyphicon-trash"></span>
             </div>
             {% endcomment %}
-
             <a id="tagger" data-featherlight="#senti_opts" class="hide"></a>
-
         </div>
     </div>
 
@@ -85,19 +68,103 @@
 {% endblock main_content %}
 
 {% block extra_js %}
+    <script src="https://cdn.rawgit.com/lyonlai/bootstrap-paginator/master/src/bootstrap-paginator.js"></script>
+    <script src="{% static 'js/handlebars-v3.0.0.js' %}"></script>
+    <script>
+    {# get tag_settigns, should always be loaded first #}
+    $.post('/lope.anno/controls/', {command: 'get_tag_settings'}, function(resp) {
+        tag_settings = JSON.parse(resp);
+    });
+    </script>
+
+    {% verbatim %}
+        {# template for "category box" #}
+        <script id="cat-template" type="text/x-handlebars-template">
+                {{#each objects}}
+                    <div class="cat" id="{{this.[0]}}" style="background:{{this.[2]}}">
+                        <h4 style="text-align:center;">{{this.[1]}}</h4>
+                    </div>
+                {{/each}}
+        </script>
+
+        {# template for pop up options #}
+        <script id="opt-template" type="text/x-handlebars-template">
+            {{#each objects}}
+                <button id={{this.[0]}} class="btn btn-lg box" style="background:{{this.[2]}}">{{this.[1]}}</button>
+            {{/each}}
+        </script>
+
+        {# template 標記設定 #}
+        <script id="template-tag_settings" type="text/x-handlebars-template">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    標記設定
+                </div>
+                <div class="panel-footer">
+                    <div class="btn-group">
+                        {{#each objects}}
+                            <button id="{{this.catid}}" class="btn btn-default tag-type">{{this.cat}}</button>
+                        {{/each}}
+                    </div>
+                </div>
+            </div>
+        </script>
+
+        <script>
+            function get_ref(catid) {
+
+                var tags = null;
+                $.each(tag_settings, function(idx, obj) {
+                    if (catid == obj.catid) {
+                        tags = obj.tags;
+                        return
+                    }
+                });
+
+                // ender template for "category box"
+                var catSource   = $("#cat-template").html(),
+                    catTemplate = Handlebars.compile(catSource),
+                    catHtml = catTemplate({objects: tags});
+                $('#cat-box').html(catHtml);
+
+                // render template for pop up options
+                var optSource   = $("#opt-template").html(),
+                    optTemplate = Handlebars.compile(optSource),
+                    optHtml = optTemplate({objects: tags});
+                $('#options').html(optHtml);
+
+                patch_cat();
+
+                // zoom-in functions for "category box"
+                var catZoom = '<div class="cat-zoom"><button class="btn btn-default" data-scale="0.1"><span class="glyphicon glyphicon-zoom-in"></span></button><button class="btn btn-default" data-scale="-0.1"><span class="glyphicon glyphicon-zoom-out"></span></button></div>';
+                $('.cat').first().append(catZoom);
+                
+            };
+
+            $('#cat-box').on('click', '.cat-zoom button', function() {
+                var scale = parseFloat($(this).attr('data-scale')),
+                    curScale = parseFloat($('#cat-box').css('zoom'));
+
+                $('#cat-box').css('zoom', curScale+scale);
+                $('.cue').css('z-index', -9999);
+            });
+        </script>
+    {% endverbatim %}
+
+    <script>
+    // render tag_settings
+    setTimeout(function() {
+        var source = $('#template-tag_settings').html(),
+            template = Handlebars.compile(source);
+        $('#hb-tag_settings').html(template({objects: tag_settings}));    
+    }, 400)
+    </script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min.js"></script>
-    {# <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script> #}
     <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
     <script src="{% static "js/featherlight.js" %}"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
-    <script src="{% static 'js/handlebars-v3.0.0.js' %}"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min.js"></script>
-
-    {# jqPlot #}
-    <script src="{% static 'jqPlot/jquery.jqplot.min.js' %}"></script>
-    <script src="{% static 'jqPlot/plugins/jqplot.pieRenderer.min.js' %}"></script>
-    <script src="{% static 'jqPlot/plugins/jqplot.highlighter.min.js' %}"></script>
-
 
     <script>
     /*CopyRight عبد النور التومي 
@@ -113,23 +180,6 @@
         return text;
     };
 
-    function remove_cue(tar) {
-        if (window.confirm("確定刪除？")) {
-            $('span.draggable').filter(function() {
-                return $(this).text() === tar;
-            }).hide("puff").delay(10).queue(function(){$(this).remove();}); 
-            var data = {text_id: text_id, cue: tar, tag: tagType, subtag: tag, csrfmiddlewaretoken: '{{csrf_token}}'};
-            $.post('{% url "api_remove_cue" %}', data, function(response) {
-                senti_main(last_open_page);
-                console.log(response);
-            });
-            {# hide and remove -- http://stackoverflow.com/a/10143347/1105489 #}
-            }
-        else {
-            senti_main(last_open_page);
-        };
-    };
-
     function safeString(string) {
         return string.replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<')
     }
@@ -142,117 +192,147 @@
         return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
     }
 
+    // get color by tag ID
+    function getColor(tagid) {
+        $.each(tag_settings, function(k2, v2) {
+            if (catid == v2.catid) {
+                $.each(v2.tags, function(k3, v3) {
+                    if (tagid == v3[0]) {
+                        color = v3[2];
+                        return false;
+                    }
+                })
+                return false;
+            }
+        });
+        return color;
+    };
+
+    // paint color on cat-box and cand-text
     function patch_cat() {
         // var txt = cand_text.textContent;
+        var postData = {command: 'get_cues', catid: catid, postid: postid};
+        $.post('{% url "controls" %}', postData, function(resp) {
+            cues = JSON.parse(resp);
+            $.each(cues, function(key, value) {
+                value.map(function(word) {
+                    // avoid things like "><"
+                    word = word.replace('>', '&gt;');
+                    word = word.replace('<', '&lt;');
+                    $('#'+key).append('<span class="cue label">'+word+'</span> ');
+                    
+                    var color = getColor(key),
+                        re = new RegExp("(" + escapeRegExp(word) + ")", 'g'); 
 
-        $.each(pairs_by_cat, function(key, value) {
-            value.map(function(word) {
-                // avoid things like "><"
-                word = word.replace('>', '&gt;');
-                word = word.replace('<', '&lt;');
-
-                $('#cat-'+key).append('<span class="draggable label">'+word+'</span> ');
-                
-                var color = ref[tag][key][1],
-                    re = new RegExp("(" + escapeRegExp(word) + ")", 'g'); 
-
-                // console.log(re);
-                cand_text = cand_text.replace(re, '<span class="hlw" style="border-radius:5px;background:'+color+'">$1</span>');
-                return false;
+                    // console.log(re);
+                    cand_text = cand_text.replace(re, '<span class="hlw" style="border-radius:5px;background:'+color+'">$1</span>');
+                    return false;
+                });
             });
+
+            $('#cand_text').html(cand_text);
         });
 
-        $('#cand_text').html(cand_text);
     };
 
     function senti_main(last_open_page) {
-        var post_data = {'last_open_page': last_open_page, tag: tagType, subtag: tag, csrfmiddlewaretoken: "{{csrf_token}}"};
-        $.post('{% url "get_cand_text" %}', post_data, function(data) {
+        // var post_data = {'last_open_page': last_open_page, tag: tagType, subtag: tag, csrfmiddlewaretoken: "{{csrf_token}}"};
+        var postData = {command: 'get_post', idx: last_open_page};
+        $.post('{% url "controls" %}', postData, function(resp) {
 
-            var json = JSON.parse(data);
-            cand_text = json['cand_text'];
-
+            var json = JSON.parse(resp);
+                cand_text = json.post;
+            totalPages = json.total_page;
+            postid = json.postid;
             cand_text = cand_text.replace(/>/g, '&gt;');
             cand_text = cand_text.replace(/</g, '&lt;');
             
-            pairs = json['pairs'];
-
-            //
-            dic = {};
-            for (var i = 0; i < ref[tag].length; i++) {
-                dic[i] = [];
-            };
-            $.each(pairs, function(word, val) {
-                dic[parseInt(val)].push(word);
-            });
-            pairs_by_cat = dic;
-            //
-            
+            // pairs = json['pairs'];
+            // dic = {};
+            // for (var i = 0; i < ref[tag].length; i++) {
+            //     dic[i] = [];
+            // };
+            // $.each(pairs, function(word, val) {
+            //     dic[parseInt(val)].push(word);
+            // });
+            // pairs_by_cat = dic;
 
             text_id = json['text_id'];
-
             console.log(text_id);
 
-            $('#goToPage').val('').attr('placeholder', '目前頁面： '+last_open_page);
             load_cand_text(cand_text);
 
-            if (last_open_page == 1 && last_open_page == total_page) {
-                $('.page-nav').hide();
-            }
-            else if (last_open_page == 1) {
-                $('.page-nav').hide();
-                $('.page-nav[data-val="-1"]').hide();
-                $('.page-nav[data-val="1"]').show();
-            }            
-            else if (last_open_page == total_page) {
-                $('.page-nav[data-val="1"]').hide();
-                $('.page-nav[data-val="-1"]').show();
-            }
-            else if (last_open_page > 1 && last_open_page < total_page) {
-                $('.page-nav').show();
-            }
-
-            get_ref(tag);
+            get_ref(catid);
 
             $.cookie('last_open_page', last_open_page);
-            console.log(last_open_page);
-
-
-            setTimeout(function() {
-                // $(".draggable").draggable();
-                $("#droppable").droppable({
-                    drop: function (event, ui) {
-                        var tar= ui.draggable.text();
-                        remove_cue(tar);
-                    }
-                });
-                $('.draggable').dblclick(function() {
-                    var tar= $(this).text();
-                    remove_cue(tar);
-                });
-            }, 500);
+            // console.log(last_open_page);
 
         });
     };
 
-    function activateTagButton() {
-        $('#options .btn').click(function() {
-            var value = $(this).attr('data-val'),
-                cue = $('#output').text(),
-                data = {cue: cue, value: value, text_id: text_id, tag: tagType, subtag: tag, csrfmiddlewaretoken: '{{csrf_token}}'};
+    $('body').on('dblclick', '.cue', function() {
+        var cue = $(this).text(),
+            tagid = $(this).closest('.cat').attr('id'),
+            postData = {command: 'remove_cue', catid: catid, postid: postid, tagid: tagid, cue: cue};
+        $.post('{% url "controls" %}', postData, function(resp) {
+            if (confirm('確認刪除？')) {
+                senti_main(last_open_page);
+            }
+        });
+    });
 
-            $.post('{% url "api" %}', data, function(res) {
-                if (res == 'ok') {
-                    $('.featherlight-close').click();
-                    senti_main(last_open_page);
-                }
-                else {
-                    alert('系統異常，請重整頁面')
-                }
+    // get catid from cookies
+    catid = $.cookie('catid')
+    if (catid) {
+        console.log(catid);
+    } else {
+        catid = $('.tag-type:first').attr('id');
+    }
 
-            });
-        })
+    // add "active" to tag (must use setTimeout)
+    setTimeout(function() {
+        $('#'+catid).addClass('active');
+    }, 500)
+
+    // get last_open_page from cookies
+    last_open_page = parseInt($.cookie('last_open_page'));
+    if (isNaN(last_open_page)) {
+        last_open_page = 1;
+        $.cookie('last_open_page', 1);
+        console.log('initialize cookie: last_open_page set to 1');
     };
+
+    // important! this function should be executed in the first priority
+    senti_main(last_open_page);
+
+    // pagination
+    setTimeout(function() {
+        $('#paginator').bootstrapPaginator({
+            currentPage: last_open_page,
+            totalPages: totalPages,
+            onPageClicked: function(e, originalEvent, type, page) {
+                senti_main(page);
+                $.cookie('last_open_page', page);
+            }
+        });
+    }, 500);
+  
+    // event for tagging (pop up box)
+    $('body').on('click', '#options > button', function() {
+        var tagid = $(this).attr('id'),
+            cue = $('#output').text(),
+            postData = {command: 'add_cue', cue: cue, tagid: tagid,  postid: postid, catid: catid};
+
+        $.post('{% url "controls" %}', postData, function(res) {
+            if (res == 1) {
+                $('.featherlight-close').click();
+                senti_main(last_open_page);
+            } else {
+                alert('系統異常，請重整頁面')
+            }
+
+        });
+    });
 
     function load_ref() {
         $.get('{% url "load_ref" %}', function(data) {
@@ -261,60 +341,22 @@
             $.each(Object.keys(_ref), function(index, value) {
                 obj = _ref[value];
                 $.extend(ref, obj);
-
-            $('.tag-type').click(function() {
-                tagType = $(this).text();
-                $.cookie('tagType', tagType);
-                // $.removeCookie('tag');
-                console.log(tagType);
-                $(this).addClass('active').siblings().removeClass('active');
-                $('.sub-panel').each(function() {
-                    if ($(this).attr('id') == tagType) {
-                        $(this).removeClass('hide');
-                    }
-                    else {
-                        $(this).addClass('hide');
-                    }
-                });
-            });
-
-            $('.btn-subtag').click(function() {
-                tag = $(this).text();
-                $.cookie('tag', tag);
-                console.log(tag);
-                // $(this).addClass('active').siblings().removeClass('active');
-                $(this).addClass('active');
-                $('.btn-subtag').not(this).removeClass('active');
-                senti_main(last_open_page);
-            }); 
-
-
             });
         });
-
     };
-
 
     load_ref();
 
-    last_open_page = parseInt($.cookie('last_open_page'));
-    text_sel = ''
-
-    if (isNaN(last_open_page)) {
-        last_open_page = 1;
-        $.cookie('last_open_page', 1);
-        console.log('initialize cookie: last_open_page set to 1');
-    };
-
-    console.log('last_open_page is: '+last_open_page);
-
-    $('.page-nav').click(function() {
-        $('#cat-box').css('top', 0);
-        var val = $(this).attr('data-val');
-        last_open_page += parseInt(val);
+    // tag-type should be renamed as "tag"
+    $('body').on('click', '.tag-type', function() {
+        catid = $(this).attr('id')
+        $(this).addClass('active').siblings().removeClass('active');
+        $.cookie('catid', catid);
+        // get_ref(catid);
         senti_main(last_open_page);
-    })
+    });
 
+    text_sel = ''
     
    $('#cand_text').mouseup(function (e){
        text_sel = getSelectionText()
@@ -341,35 +383,6 @@
 
         $('#id_tag').val(senti_val);
 
-    });
-
-    $('#goToPage').keydown(function (e){
-        if(e.keyCode == 13){
-            if ( $(this).val() < 1 || $(this).val() > total_page ) {
-                alert('數字需在 0 ~ '+total_page+' 之間')
-            }
-            else {
-                last_open_page = parseInt($(this).val());
-                senti_main(last_open_page);                
-            }
-        }
-    });
-    {# only allow integer input #}
-    $("#goToPage").keyup(function() {
-        $("#goToPage").val(this.value.match(/[0-9]*/));
-    });
-
-    {# hide post #}
-    $('#hidePost').click(function() {
-        var data = {post_id: text_id, csrfmiddlewaretoken: '{{csrf_token}}'};
-        $.post('{% url "hide_post" %}', data, function(response) {
-            if (response === 'ok') {
-                if (confirm('確定刪除?')) {
-                    $.removeCookie('last_open_page', null, {path: '/'});
-                    location.reload();
-                }
-            }
-        });
     });
 
     {# show post list #}
@@ -451,20 +464,16 @@
 
     $("._main").on('mouseenter', '.hlw', function() {
         var cue = $(this).text();
-        $('.draggable.label:contains("'+cue+'")').css('opacity', '1').css('z-index', '444').css('position', 'relative');
-        $('.draggable.label:not(:contains("'+cue+'"))').css('opacity', '0.3');
+        $('.cue.label:contains("'+cue+'")').css('opacity', '1').css('z-index', '444').css('position', 'relative');
+        $('.cue.label:not(:contains("'+cue+'"))').css('opacity', '0.3');
     });
 
     $("._main").on('mouseleave', '.hlw', function() {
-        $('.draggable.label').css('opacity', '1');
+        $('.cue.label').css('opacity', '1');
         $('#cat-box').css('opacity', '1');
     });
 
     </script>
-    {% include 'ref.html' %}
-
-
-
 {% endblock extra_js %}
 
 {% block extra_css %}
@@ -493,7 +502,7 @@
         text-decoration:none
     }
 
-    .draggable {
+    .cue {
         cursor: pointer; 
         font-size:130%;
         background:#E5E4E2;
@@ -571,6 +580,189 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/featherlight.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'jqPlot/jquery.jqplot.min.css' %}">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.1.1/gh-fork-ribbon.min.css" />
+
+    {# bootstrap paginator css, adopted from http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css#}
+    <style>
+        .pagination {
+            margin: 20px 0;
+        }
+
+        .pagination ul {
+            display: inline-block;
+            *display: inline;
+            *zoom: 1;
+            margin-left: 0;
+            margin-bottom: 0;
+            -webkit-border-radius: 4px;
+            -moz-border-radius: 4px;
+            border-radius: 4px;
+            -webkit-box-shadow: 0 1px 2px rgba(0,  0,  0,  0.05);
+            -moz-box-shadow: 0 1px 2px rgba(0,  0,  0,  0.05);
+            box-shadow: 0 1px 2px rgba(0,  0,  0,  0.05);
+        }
+
+        .pagination ul>li {
+            display: inline;
+        }
+
+        .pagination ul>li>a, .pagination ul>li>span {
+            float: left;
+            padding: 4px 12px;
+            line-height: 20px;
+            text-decoration: none;
+            background-color: #ffffff;
+            border: 1px solid #dddddd;
+            border-left-width: 0;
+        }
+
+        .pagination ul>li>a:hover, .pagination ul>li>a:focus, .pagination ul>.active>a, .pagination ul>.active>span {
+            background-color: #f5f5f5;
+        }
+
+        .pagination ul>.active>a, .pagination ul>.active>span {
+            color: #999999;
+            cursor: default;
+        }
+
+        .pagination ul>.disabled>span, .pagination ul>.disabled>a, .pagination ul>.disabled>a:hover, .pagination ul>.disabled>a:focus {
+            color: #999999;
+            background-color: transparent;
+            cursor: default;
+        }
+
+        .pagination ul>li:first-child>a, .pagination ul>li:first-child>span {
+            border-left-width: 1px;
+            -webkit-border-top-left-radius: 4px;
+            -moz-border-radius-topleft: 4px;
+            border-top-left-radius: 4px;
+            -webkit-border-bottom-left-radius: 4px;
+            -moz-border-radius-bottomleft: 4px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .pagination ul>li:last-child>a, .pagination ul>li:last-child>span {
+            -webkit-border-top-right-radius: 4px;
+            -moz-border-radius-topright: 4px;
+            border-top-right-radius: 4px;
+            -webkit-border-bottom-right-radius: 4px;
+            -moz-border-radius-bottomright: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        .pagination-centered {
+            text-align: center;
+        }
+
+        .pagination-right {
+            text-align: right;
+        }
+
+        .pagination-large ul>li>a, .pagination-large ul>li>span {
+            padding: 11px 19px;
+            font-size: 17.5px;
+        }
+
+        .pagination-large ul>li:first-child>a, .pagination-large ul>li:first-child>span {
+            -webkit-border-top-left-radius: 6px;
+            -moz-border-radius-topleft: 6px;
+            border-top-left-radius: 6px;
+            -webkit-border-bottom-left-radius: 6px;
+            -moz-border-radius-bottomleft: 6px;
+            border-bottom-left-radius: 6px;
+        }
+
+        .pagination-large ul>li:last-child>a, .pagination-large ul>li:last-child>span {
+            -webkit-border-top-right-radius: 6px;
+            -moz-border-radius-topright: 6px;
+            border-top-right-radius: 6px;
+            -webkit-border-bottom-right-radius: 6px;
+            -moz-border-radius-bottomright: 6px;
+            border-bottom-right-radius: 6px;
+        }
+
+        .pagination-mini ul>li:first-child>a, .pagination-small ul>li:first-child>a, .pagination-mini ul>li:first-child>span, .pagination-small ul>li:first-child>span {
+            -webkit-border-top-left-radius: 3px;
+            -moz-border-radius-topleft: 3px;
+            border-top-left-radius: 3px;
+            -webkit-border-bottom-left-radius: 3px;
+            -moz-border-radius-bottomleft: 3px;
+            border-bottom-left-radius: 3px;
+        }
+
+        .pagination-mini ul>li:last-child>a, .pagination-small ul>li:last-child>a, .pagination-mini ul>li:last-child>span, .pagination-small ul>li:last-child>span {
+            -webkit-border-top-right-radius: 3px;
+            -moz-border-radius-topright: 3px;
+            border-top-right-radius: 3px;
+            -webkit-border-bottom-right-radius: 3px;
+            -moz-border-radius-bottomright: 3px;
+            border-bottom-right-radius: 3px;
+        }
+
+        .pagination-small ul>li>a, .pagination-small ul>li>span {
+            padding: 2px 10px;
+            font-size: 11.9px;
+        }
+
+        .pagination-mini ul>li>a, .pagination-mini ul>li>span {
+            padding: 0 6px;
+            font-size: 10.5px;
+        }
+
+        .pager {
+            margin: 20px 0;
+            list-style: none;
+            text-align: center;
+            *zoom: 1;
+        }
+        .pager:before, .pager:after {
+            display: table;
+            content: "";
+            line-height: 0;
+        }
+
+        .pager:after {
+            clear: both;
+        }
+
+        .pager li {
+            display: inline;
+        }
+
+        .pager li>a, .pager li>span {
+            display: inline-block;
+            padding: 5px 14px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            -webkit-border-radius: 15px;
+            -moz-border-radius: 15px;
+            border-radius: 15px;
+        }
+
+        .pager li>a:hover, .pager li>a:focus {
+            text-decoration: none;
+            background-color: #f5f5f5;
+        }
+
+        .pager .next>a, .pager .next>span {
+            float: right;
+        }
+
+        .pager .previous>a, .pager .previous>span {
+            float: left;
+        }
+
+        .pager .disabled>a, .pager .disabled>a:hover, .pager .disabled>a:focus, .pager .disabled>span {
+            color: #999999;
+            background-color: #fff;
+            cursor: default;
+        }
+
+        /* change cursor to pointer */
+        #paginator > ul > li {
+            cursor: pointer;
+        }
+
+    </style>
 {% endblock extra_css %}
 
 {% comment %}
@@ -580,8 +772,7 @@ document.ready 重複
 url hardcode
 重複標記顏色問題
 remove_cue後無需reload cand_text
-上下篇and goToPage validator
-修改標記（draggable）
+修改標記（cue）
 修改所有news開頭為/的id
 加上顏色後變色並持續一段時間
 {% endcomment %}

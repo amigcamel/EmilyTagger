@@ -6,6 +6,7 @@ from os.path import join
 from itertools import chain
 from .sqlconnect import SqlConnect
 from itertools import groupby
+import uuid
 import logging
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,15 @@ class DB_Conn:
         return words
 
     @classmethod
+    def paste_post(cls, **kw):
+        uid = uuid.uuid4().hex
+        user = kw['user']
+        post = kw['post']
+        client = cls(user)
+        client.command('hset', 'posts', uid, post)
+        return 1
+
+    @classmethod
     def update_tag_settings(cls, **kw):
         tag_settings = kw['tag_settings']
         user = kw['user']
@@ -105,6 +115,71 @@ class DB_Conn:
         except:
             tag_settings = '[]'
         return tag_settings
+
+    @classmethod
+    def get_post(cls, **kw):
+        ''' return post and total page'''
+        user = kw['user']
+        idx = int(kw['idx'])
+        client = cls(user)
+        keys = client.command('hkeys', 'posts')
+        uid = keys[idx].decode('utf-8')
+        post = client.command('hget', 'posts', uid)
+        post = post.decode('utf-8')
+        output = {'post': post, 'total_page': len(keys), 'postid': uid}
+        return json.dumps(output, ensure_ascii=False)
+
+    @classmethod
+    def add_cue(cls, **kw):
+        user = kw['user']
+        catid = kw['catid']
+        postid = kw['postid']
+        tagid = kw['tagid']
+        cue = kw['cue']
+        client = cls(user)
+        cue_dic = client.command('hget', postid, catid)
+        if cue_dic:
+            cue_dic = json.loads(cue_dic)  # should be a dict
+            if tagid in cue_dic:
+                cues = cue_dic[tagid]
+                if cue not in cues:
+                    cues.append(cue)
+            else:
+                cue_dic[tagid] = [cue]
+        else:
+            cue_dic = {tagid: [cue]}
+
+        cue_dic = json.dumps(cue_dic, ensure_ascii=False)
+        client.command('hset', postid, catid, cue_dic)
+        return 1
+
+    @classmethod
+    def remove_cue(cls, **kw):
+        user = kw['user']
+        catid = kw['catid']
+        postid = kw['postid']
+        tagid = kw['tagid']
+        cue = kw['cue']
+        client = cls(user)
+        cue_dic = client.command('hget', postid, catid)
+        cue_dic = json.loads(cue_dic)
+        cue_dic[tagid].remove(cue)
+        cue_dic = json.dumps(cue_dic, ensure_ascii=False)
+        client.command('hset', postid, catid, cue_dic)
+        return 1
+
+    @classmethod
+    def get_cues(cls, **kw):
+        user = kw['user']
+        postid = kw['postid']
+        catid = kw['catid']
+        client = cls(user)
+        tags = client.command('hget', postid, catid)
+        if tags:
+            json.loads(tags)
+        else:
+            tags = '{}'
+        return tags
 
     @classmethod
     def pack_tagged_words(cls, username):

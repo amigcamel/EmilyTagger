@@ -2,14 +2,23 @@
 {% load staticfiles %}
 
 {% block main_content %}
+
 	<div class="row">
+		<div class="col-md-12">
+			<button id="add-cat" class="btn btn-success pull-right"><i class="fa fa-plus"></i> 新增類別</button>
+		</div>
+		<hr>
 		<div id="hb-tag_settings"></div>
+
+		<div class="col-md-12">
+			<div class="pull-right">
+				<button id="btn-save" class="btn btn-danger">儲存</button>
+				<button id="btn-cancel" class="btn btn-info">取消</button>
+			</div>
+		</div>
 	</div>
 
-	<div class="pull-right">
-		<button id="btn-save" class="btn btn-danger">儲存</button>
-		<button class="btn btn-info">取消</button>
-	</div>
+	
 	{# context menu body #}
 	<div id="context-menu">
 		<ul class="dropdown-menu" role="menu">
@@ -21,13 +30,13 @@
 	{% verbatim %}
 	    <script id="template-tag_settings" type="text/x-handlebars-template">
 		    {{#each objects}}
-				<div class="col-lg-12">
+				<div class="settings col-md-12">
 					<div class="box box-default">
 						<div class="box-header with-border">
-							<h3 class="box-title">{{this.cat}}</h3>
+							<h3 id="{{this.catid}}" class="box-title">{{this.cat}}</h3>
 							<div class="box-tools pull-right">
-								<button type="button" class="btn btn-box-tool" data-widget="collapse">
-									<i class="fa fa-minus"></i>
+								<button class="btn btn-box-tool btn-del-cat">
+									<i class="fa fa-remove"></i>
 								</button>
 							</div>
 						</div>
@@ -115,13 +124,34 @@
 		    });
 		};
 
+		// generate uuid, ref: http://stackoverflow.com/a/2117523/1105489
+		function guid() {
+			function s4() {
+			    return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+			}
+			return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+		};
+
 		// render tag_settings
-		var source = $('#template-tag_settings').html();
-		var template = Handlebars.compile(source);
-		$('#hb-tag_settings').html(template({objects: {{tag_settings|safe}}}));
+		function renderTagSettigns(tag_settings) {
+			var source = $('#template-tag_settings').html(),
+				template = Handlebars.compile(source);
+			$('#hb-tag_settings').append(template({objects: tag_settings}));
+		}
+		renderTagSettigns({{tag_settings|safe}});
+
+		// add cat
+		$('#add-cat').click(function(){
+			renderTagSettigns([{cat:'類別', catid: 'cat-'+guid()}]);
+		});
+
+		// remove cat
+		$('body').on('click', '.btn-del-cat', function() {
+			$(this).closest('.settings').remove();
+		});
 
 	    // add tag
-	    $('.label-tag-plus').click(function() {
+	    $('body').on('click', '.label-tag-plus', function() {
 	    	$('<a class="label label-default">標籤</a>').uniqueId().insertBefore($(this));
 	    	initContextMenu();
 	    	initColorpicker();
@@ -131,22 +161,31 @@
 	    $('#btn-save').click(function() {
 	    	box_con = [];
 	    	$('.box').each(function(){
-	    		cat = $(this).find('.box-title').text();
-	    		tags = $(this).find('.label:not(".label-tag-plus")');
-	    		con = [];
+	    		var cat = $(this).find('.box-title').text(),
+		    		catid = $(this).find('h3').attr('id'),
+		    		tags = $(this).find('.label:not(".label-tag-plus")'),
+		    		con = [];
 	    		$(tags).each(function() {
-	    			uid = $(this).attr('id');
-	    			tag = $(this).text();
-	    			color = $(this).css('background-color');
+	    			var uid = $(this).attr('id'),
+		    			tag = $(this).text(),
+		    			color = $(this).css('background-color');
 	    			con.push([uid, tag, color]);
 	    		});
-		    	box_con.push({cat: cat, tags: con})
+		    	box_con.push({cat: cat, catid: catid, tags: con})
 	    	});
 	    	tag_settings = JSON.stringify(box_con);
+	    	console.log(tag_settings);
 	    	postData = {command: 'update_tag_settings', tag_settings: tag_settings};
 	    	$.post('{%url "controls" %}', postData, function(resp){
 	    		location.reload();
 	    	});
+	    });
+
+	    // cancel personal settings
+	    $('#btn-cancel').click(function() {
+	    	if (confirm('確定取消')) {
+	    		location.reload();
+	    	}
 	    });
 
 	    // initiate contextmenu
