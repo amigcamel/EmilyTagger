@@ -3,10 +3,7 @@ from django.http import HttpResponseForbidden
 from django.shortcuts import render_to_response  # resolve_url
 from django.http import HttpResponse  # HttpResponseRedirect
 from django.template import RequestContext
-# from .forms import PasteTextForm, UploadTextForm
-from .sqlconnect import SqlConnect
 from .rlite_api import DB_Conn
-# from datetime import datetime
 import os
 from zipfile import ZipFile
 import shutil
@@ -29,10 +26,11 @@ def download_source_text(request):
         zip.write(base_filename)
 
     user = request.user.username
+    kw = {'user': user}
     tmp_path = '/tmp/' + user
     if not os.path.isdir(tmp_path):
         os.mkdir(tmp_path)
-    posts = SqlConnect.pack_source_text(user)
+    posts = DB_Conn.get_posts(**kw)
     text_paths = []
     zip_path = '/tmp/%s.zip' % user
     for num, post in enumerate(posts, 1):
@@ -56,7 +54,8 @@ def download_source_text(request):
 
 
 def download_tagged_words(request):
-    res = DB_Conn.pack_tagged_words(request.user.username)
+    kw = {'user': request.user.username}
+    res = DB_Conn.pack_tagged_words(**kw)
     resp = HttpResponse(res, content_type='application.json')
     resp['Content-Disposition'] = 'attachment; filename=tagged_words.json'
     return resp
@@ -181,3 +180,5 @@ get_post = DB_Conn.get_post
 add_cue = DB_Conn.add_cue
 get_cues = DB_Conn.get_cues
 remove_cue = DB_Conn.remove_cue
+get_posts = DB_Conn.get_posts
+pack_tagged_words = DB_Conn.pack_tagged_words

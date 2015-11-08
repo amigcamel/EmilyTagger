@@ -3,10 +3,9 @@ import hirlite
 import simplejson as json
 from django.conf import settings
 from os.path import join
-from itertools import chain
-from .sqlconnect import SqlConnect
-from itertools import groupby
+# from itertools import chain
 import uuid
+from collections import defaultdict
 import logging
 logger = logging.getLogger(__name__)
 
@@ -26,63 +25,63 @@ class DB_Conn:
         args = [i.encode('utf-8') for i in args]
         return self.db.command(*args)
 
-    def read(self, uid):
-        '''read tagged words by uid'''
+    # def read(self, uid):
+    #     '''read tagged words by uid'''
 
-        res = self.command('get', uid)
+    #     res = self.command('get', uid)
 
-        if res:
-            res = json.loads(res)
-        else:
-            res = {}
-        return res
+    #     if res:
+    #         res = json.loads(res)
+    #     else:
+    #         res = {}
+    #     return res
 
-    def save(self, uid, cue, value):
-        dic = self.command('get', uid)
-        if dic:
-            dic = json.loads(dic)
-        else:
-            dic = {}
+    # def save(self, uid, cue, value):
+    #     dic = self.command('get', uid)
+    #     if dic:
+    #         dic = json.loads(dic)
+    #     else:
+    #         dic = {}
 
-        dic[cue] = value
-        obj = json.dumps(dic)
-        logger.debug('obj: ' + str(obj))
+    #     dic[cue] = value
+    #     obj = json.dumps(dic)
+    #     logger.debug('obj: ' + str(obj))
 
-        self.command('set', uid, obj)
+    #     self.command('set', uid, obj)
 
-        logger.debug('UID: %s, CUE: %s, VALUE: %s -- update successfully!' % (uid, cue, value))
-        return True
+    #     logger.debug('UID: %s, CUE: %s, VALUE: %s -- update successfully!' % (uid, cue, value))
+    #     return True
 
-    def remove(self, uid, cue):
-        dic = self.read(uid)
-        dic.pop(cue)
-        obj = json.dumps(dic)
-        self.command('set', uid, obj)
-        logger.debug('UID: %s, CUE: %s deleted successfully!' % (uid, cue))
-        return True
+    # def remove(self, uid, cue):
+    #     dic = self.read(uid)
+    #     dic.pop(cue)
+    #     obj = json.dumps(dic)
+    #     self.command('set', uid, obj)
+    #     logger.debug('UID: %s, CUE: %s deleted successfully!' % (uid, cue))
+    #     return True
 
-    def collect(self, subtag):
-        all_keys = self.command('keys', '*')
-        con = []
-        for key in all_keys:
-            key = key.decode('utf-8')
-            if key.split('__')[-1] == subtag:
-                value = self.read(key)
-                con.append([key, value])
-            logger.debug('cursor: ' + key)
+    # def collect(self, subtag):
+    #     all_keys = self.command('keys', '*')
+    #     con = []
+    #     for key in all_keys:
+    #         key = key.decode('utf-8')
+    #         if key.split('__')[-1] == subtag:
+    #             value = self.read(key)
+    #             con.append([key, value])
+    #         logger.debug('cursor: ' + key)
 
-        return con
+    #     return con
 
-    def collect_tagged_words(self, subtag, with_val=False):
-        items = self.collect(subtag)
-        wlst = (i[1] for i in items)
-        if with_val:
-            wlst = (i.items() for i in wlst)
-        else:
-            wlst = (i.keys() for i in wlst)
-        wlst = chain.from_iterable(wlst)
-        words = list(set(wlst))
-        return words
+    # def collect_tagged_words(self, subtag, with_val=False):
+    #     items = self.collect(subtag)
+    #     wlst = (i[1] for i in items)
+    #     if with_val:
+    #         wlst = (i.items() for i in wlst)
+    #     else:
+    #         wlst = (i.keys() for i in wlst)
+    #     wlst = chain.from_iterable(wlst)
+    #     words = list(set(wlst))
+    #     return words
 
     @classmethod
     def paste_post(cls, **kw):
@@ -182,46 +181,55 @@ class DB_Conn:
         return tags
 
     @classmethod
-    def pack_tagged_words(cls, username):
-        client = cls(username)
-        keys = client.db.command('keys', '*')
-        sql_client = SqlConnect(username)
-        res = sql_client.fetch(''' SELECT * FROM tags ''')[0][1]
-        ref = json.loads(res)
-        ref_dic = {}
-        for v in ref.values():
-            ref_dic.update(v)
-        pairs = [(key.decode('utf8').split('__')[-1], json.loads(client.db.command('get', key))) for key in keys]
-        pairs.sort(key=lambda x: x[0])
-        output = {}
-        for k, g in groupby(pairs, lambda x: x[0]):
-            dic = {}
-            for gg in g:
-                d = gg[1]
-                for kk, vv in d.items():
-                    dic[kk] = ref_dic[k][vv][0]
-            output[k] = dic
-        output = json.dumps(output)
+    def get_posts(cls, **kw):
+        user = kw['user']
+        client = cls(user)
+        res = client.command('hgetall', 'posts')
+        posts = res[1::2]
+        posts = [i.decode('utf-8') for i in posts]
+        return posts
+
+    @classmethod
+    def pack_tagged_words(cls, **kw):
+        user = kw['user']
+        client = cls(user)
+
+        tag_settings = client.command('get', 'tag_settings')
+        tag_settings = json.loads(tag_settings)
+        ref = {}
+        for setting in tag_settings:
+            catid = setting['catid']
+            ref[catid] = {'name': setting['cat'], 'tags': {}}
+            for tag in setting['tags']:
+                tagid = tag[0]
+                tagname = tag[1]
+                ref[catid]['tags'][tagid] = tagname
+
+        def chunks(l, n):
+            # split a list into evenly sized chunks, ref: http://stackoverflow.com/a/1751478/1105489
+            n = max(1, n)
+            return [l[i:i + n] for i in range(0, len(l), n)]
+
+        keys = client.command('keys', '*')
+        keys = [i for i in keys if len(i) == 32]
+        output = defaultdict(dict)
+        for postid in keys:
+            res = client.command('hgetall', postid.decode('utf-8'))
+            tag_dic = dict(chunks(res, 2))
+            for catid in ref.keys():
+                catname = ref[catid]['name']
+                tags = tag_dic.get(catid.encode('utf-8'), b'{}')
+                tags = json.loads(tags)
+                if tags:
+                    for tagid, tagname in ref[catid]['tags'].items():
+                        cue_lst = tags.get(tagid)
+                        if cue_lst:
+                            if tagname in output[catname]:
+                                output[catname][tagname] += cue_lst
+                            else:
+                                output[catname][tagname] = cue_lst
+        output = json.dumps(output, ensure_ascii=False, indent=4)
         return output
 
-
-def update(cue, value, text_id, tag, subtag, user):
-    value = int(value)
-    uid = '%s__%s' % (text_id, subtag)
-    conn = DB_Conn(user)
-    res = conn.save(uid, cue, value)
-    return res
-
-
-def read_pairs(text_id, tag, subtag, user):
-    uid = '%s__%s' % (text_id, subtag)
-    conn = DB_Conn(user)
-    res = conn.read(uid)
-    return res
-
-
-def remove_cue(text_id, tag, subtag, cue, user):
-    uid = '%s__%s' % (text_id, subtag)
-    conn = DB_Conn(user)
-    res = conn.remove(uid, cue)
-    return res
+        # output = json.dumps(output, ensure_ascii=False)
+        # return output

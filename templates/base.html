@@ -78,7 +78,10 @@
                                     <img alt="User Image" class="img-circle"
                                     src='http://lopen.linguistics.ntu.edu.tw/assets/icon/logo.jpg'>
                                     <p>{{ user.get_username }}
-                                    <small>Member since Nov. 2012</small></p>
+                                        {% comment %}
+                                        <small>Member since Nov. 2012</small>
+                                        {% endcomment %}
+                                    </p>
                                 </li><!-- Menu Body -->
                                 <li class="user-footer">
                                     <div class="pull-right">
@@ -107,7 +110,9 @@
                     <div class="pull-left info">
                         <p>{{user.get_username}}</p>
                     </div>
-                </div><!-- search form -->
+                </div>
+                {% comment %}
+                <!-- search form -->
                 <form action="#" class="sidebar-form" method="get">
                     <div class="input-group">
                         <input class="form-control" name="q" placeholder=
@@ -117,10 +122,14 @@
                         "input-group-btn fa fa-search" style=
                         "font-style: italic"></span></button></span>
                     </div>
-                </form><!-- /.search form -->
+                </form>
+                <!-- /.search form -->
+                {% endcomment %}
                 <!-- sidebar menu: : style can be found in sidebar.less -->
                 <ul class="sidebar-menu">
+                    {% comment %}
                     <li class="header">MAIN NAVIGATION</li>
+                    {% endcomment %}
                     <li class="treeviews">
                         <a href="#">
                             <i class="fa fa-wrench"></i> <span>標記系統</span> <i class="fa fa-angle-left pull-right"></i>
@@ -134,11 +143,11 @@
                     <li>
                         <a href='{% url "tagdist" %}'><i class="fa fa-line-chart"></i> <span>標記分佈</span></a>
                     </li>
-                    <li>
-                        <a href='{% url "worddist" %}'><i class="fa fa-pie-chart"></i> <span>詞頻分佈</span></a>
+                    <li  style="cursor: not-allowed">
+                        <a{# href='{% url "worddist" %}'#}><i class="fa fa-pie-chart"></i> <span>詞頻分佈</span></a>
                     </li>
-                    <li>
-                        <a href='{% url "tagstat" %}'><i class="fa fa-bar-chart"></i> <span>標記狀態</span></a>
+                    <li style="cursor: not-allowed">
+                        <a{# href='{% url "tagstat" %}'#}><i class="fa fa-bar-chart"></i> <span>標記狀態</span></a>
                     </li>
                     <li>
                         <a href='{% url "download" %}'><i class="fa fa-download"></i> <span>下載</span></a>
