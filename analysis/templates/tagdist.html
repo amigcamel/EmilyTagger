@@ -5,14 +5,45 @@
 {% endblock main_content %}
 
 {% block extra_js %}
+    <script>
+    {# get tag_settigns, should always be loaded first #}
+    $.post('{% url "controls" %}', {command: 'get_tag_settings'}, function(resp) {
+        tag_settings = JSON.parse(resp);
+    });
+
+    function getColorByCatName(catname) {
+    	$.each(tag_settings, function(idx, obj) {
+			colorDic = {};
+    		if (catname == obj.cat) {
+    			$.each(obj.tags, function(idx, item) {
+    				colorDic[item[1]] = item[2];
+    			})
+    			return false
+    		}
+    	});
+    	return colorDic;
+    };
+    </script>
+
 	<script src="http://code.highcharts.com/highcharts.js"></script>
 	<script src="http://code.highcharts.com/highcharts-3d.js"></script>
 	<script src="http://code.highcharts.com/modules/exporting.js"></script>
 	<script type="text/javascript">
-		function plotTagDist(cat, data) {
+		function plotTagDist(catname, data) {
 			var ele = $('<div></div>').uniqueId(),
 				div = '#'+ele.attr('id');
 			$('#h_tagdist').append(ele);
+
+			{# set colors #}
+			var colorDic = getColorByCatName(catname),
+				colors = [];
+			$.each(data, function(idx, item) {
+				colors.push(colorDic[item[0]]);
+			});
+			Highcharts.setOptions({
+				colors: colors
+			});
+
 		    $(div).highcharts({
 		    	credits: {enabled: false},
 		        chart: {
@@ -25,7 +56,7 @@
 		            }
 		        },
 		        title: {
-		            text: cat
+		            text: catname
 		        },
 		        tooltip: {
 		            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -51,9 +82,9 @@
 
 		$(function() {
 			$.post('{% url "controls" %}', {command: 'pack_tagged_words'}, function(resp) {
-				var tagdist = JSON.parse(resp),
-					data = [];
+				var tagdist = JSON.parse(resp);
 				$.each(tagdist, function(k, v) {
+					data = [];
 					$.each(v, function(kk, vv) {
 						data.push([kk, vv.length])
 					});

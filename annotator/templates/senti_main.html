@@ -6,7 +6,7 @@
 {% endblock %}{% endblock %}
 
 {% block page_subname %}
-想標什麼，就標什麼
+{#想標什麼，就標什麼#}
 {% endblock %}
 
 {% block main_content %}
@@ -43,7 +43,7 @@
             <div id="paginator"></div>
             <div id="cand_text" data-intro="選取要標記的字串後，標記選項即會跳出"></div>
             <br> 
-            <button id="hidePost" class="btn btn-danger" disabled="disabled">刪除此文</button>
+            <button id="btn-remove-post" class="btn btn-danger">刪除此文</button>
         </div>
         <div class="col-md-6">
             <div id='cat-box' data-intro="這裡顯示您已標記的字串，在該字串上點兩下即可刪除"></div>
@@ -72,7 +72,7 @@
     <script src="{% static 'js/handlebars-v3.0.0.js' %}"></script>
     <script>
     {# get tag_settigns, should always be loaded first #}
-    $.post('/lope.anno/controls/', {command: 'get_tag_settings'}, function(resp) {
+    $.post('{% url "controls" %}', {command: 'get_tag_settings'}, function(resp) {
         tag_settings = JSON.parse(resp);
     });
     </script>
@@ -237,31 +237,18 @@
 
     function senti_main(last_open_page) {
         // var post_data = {'last_open_page': last_open_page, tag: tagType, subtag: tag, csrfmiddlewaretoken: "{{csrf_token}}"};
-        var postData = {command: 'get_post', idx: last_open_page};
+        var postData = {command: 'get_post', idx: last_open_page-1};
         $.post('{% url "controls" %}', postData, function(resp) {
 
             var json = JSON.parse(resp);
                 cand_text = json.post;
+            postid = json.postid;
             totalPages = json.total_page;
             postid = json.postid;
             cand_text = cand_text.replace(/>/g, '&gt;');
             cand_text = cand_text.replace(/</g, '&lt;');
-            
-            // pairs = json['pairs'];
-            // dic = {};
-            // for (var i = 0; i < ref[tag].length; i++) {
-            //     dic[i] = [];
-            // };
-            // $.each(pairs, function(word, val) {
-            //     dic[parseInt(val)].push(word);
-            // });
-            // pairs_by_cat = dic;
-
-            text_id = json['text_id'];
-            console.log(text_id);
 
             load_cand_text(cand_text);
-
             get_ref(catid);
 
             $.cookie('last_open_page', last_open_page);
@@ -298,7 +285,7 @@
     last_open_page = parseInt($.cookie('last_open_page'));
     if (isNaN(last_open_page)) {
         last_open_page = 1;
-        $.cookie('last_open_page', 1);
+        $.cookie('last_open_page', last_open_page);
         console.log('initialize cookie: last_open_page set to 1');
     };
 
@@ -310,12 +297,25 @@
         $('#paginator').bootstrapPaginator({
             currentPage: last_open_page,
             totalPages: totalPages,
+            numberOfPages: 5,
+            aligment: 'center',
             onPageClicked: function(e, originalEvent, type, page) {
                 senti_main(page);
+                last_open_page = page;
                 $.cookie('last_open_page', page);
             }
         });
     }, 500);
+
+    // remove post
+    $('#btn-remove-post').click(function() {
+        if (confirm('確定刪除？')) {
+            $.post('{% url "controls" %}', {command: 'remove_post', postid: postid}, function(resp) {
+                clearAllCookies()
+                location.reload();
+            });
+        }
+    })
   
     // event for tagging (pop up box)
     $('body').on('click', '#options > button', function() {

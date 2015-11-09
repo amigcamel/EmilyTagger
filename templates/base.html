@@ -85,16 +85,13 @@
                                 </li><!-- Menu Body -->
                                 <li class="user-footer">
                                     <div class="pull-right">
-                                        <a class="btn btn-default btn-flat"
-                                        href='{% url "signout" %}'>登出</a>
+                                        <a class="btn btn-default btn-flat" href='{% url "signout" %}'>登出</a>
                                     </div>
                                 </li>
                             </ul>
                         </li><!-- Control Sidebar Toggle Button -->
                         <li>
-                            <a class="fa fa-gears" data-toggle=
-                            "control-sidebar" href="#" style=
-                            "font-style: italic"></a>
+                            <a style="cursor: not-allowed" class="fa fa-gears" href="#" style="font-style: italic" {# data-toggle="control-sidebar" #}></a>
                         </li>
                     </ul>
                 </div>
@@ -159,12 +156,14 @@
             <!-- Content Header (Page header) -->
             <section class="content-header">
                 <h1>{% block page_name %}{% endblock %} <small>{% block page_subname %}{% endblock %}</small></h1>
+                {% comment %}
                 <ol class="breadcrumb">
                     <li>
                         <a href='{% url "index" %}'><i class="fa fa-dashboard"></i> 首頁</a>
                     </li>
                     <li class="active">{% block breadcrumb %}{% endblock %}</li>
                 </ol>
+                {% endcomment %}
             </section><!-- Main content -->
             <section class="content">
                 {% block main_content %}
@@ -382,7 +381,17 @@
     </script>
 
     <script>
+    // clear all cookies
+    function clearAllCookies() {
+        var cookies = $.cookie();
+        for(var cookie in cookies) {
+           $.removeCookie(cookie);
+        }
+    }
+
+    // sign in
     $("#btn-signin").on("click", function(e) {
+        clearAllCookies();
         e.preventDefault();
         $.post('{% url 'signin' %}', {username: $('#userid').val(), password: $('#passwordinput').val(),csrfmiddlewaretoken: '{{csrf_token}}'}, function(response) {
             if (response === 'OK') {

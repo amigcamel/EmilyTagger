@@ -154,6 +154,7 @@ def controls(request):
             kw[k] = v
         kw['user'] = request.user.username
         cmd = kw.pop('command')
+        logger.debug(cmd)
         res = globals()[cmd](**kw)
         return HttpResponse(res)
 
@@ -182,3 +183,4 @@ get_cues = DB_Conn.get_cues
 remove_cue = DB_Conn.remove_cue
 get_posts = DB_Conn.get_posts
 pack_tagged_words = DB_Conn.pack_tagged_words
+remove_post = DB_Conn.remove_post

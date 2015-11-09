@@ -116,19 +116,6 @@ class DB_Conn:
         return tag_settings
 
     @classmethod
-    def get_post(cls, **kw):
-        ''' return post and total page'''
-        user = kw['user']
-        idx = int(kw['idx'])
-        client = cls(user)
-        keys = client.command('hkeys', 'posts')
-        uid = keys[idx].decode('utf-8')
-        post = client.command('hget', 'posts', uid)
-        post = post.decode('utf-8')
-        output = {'post': post, 'total_page': len(keys), 'postid': uid}
-        return json.dumps(output, ensure_ascii=False)
-
-    @classmethod
     def add_cue(cls, **kw):
         user = kw['user']
         catid = kw['catid']
@@ -181,6 +168,19 @@ class DB_Conn:
         return tags
 
     @classmethod
+    def get_post(cls, **kw):
+        ''' return post and total page'''
+        user = kw['user']
+        idx = int(kw['idx'])
+        client = cls(user)
+        keys = client.command('hkeys', 'posts')
+        uid = keys[idx].decode('utf-8')
+        post = client.command('hget', 'posts', uid)
+        post = post.decode('utf-8')
+        output = {'post': post, 'total_page': len(keys), 'postid': uid}
+        return json.dumps(output, ensure_ascii=False)
+
+    @classmethod
     def get_posts(cls, **kw):
         user = kw['user']
         client = cls(user)
@@ -188,6 +188,14 @@ class DB_Conn:
         posts = res[1::2]
         posts = [i.decode('utf-8') for i in posts]
         return posts
+
+    @classmethod
+    def remove_post(cls, **kw):
+        user = kw['user']
+        postid = kw['postid']
+        client = cls(user)
+        client.command('hdel', 'posts', postid)
+        return 1
 
     @classmethod
     def pack_tagged_words(cls, **kw):
