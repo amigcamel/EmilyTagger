@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse, HttpResponseRedirect
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
-from annotator.sqlconnect import SqlConnect
+# from annotator.sqlconnect import SqlConnect
 
 
 def signin(request):
@@ -36,9 +36,9 @@ def register(request):
         exist = User.objects.filter(username=username)
         if exist:
             return HttpResponse('此帳號已被註冊')
-        sc = SqlConnect(username)
-        sc.create_tables()
-        sc.create_sample_tags()
+        # sc = SqlConnect(username)
+        # sc.create_tables()
+        # sc.create_sample_tags()
         User.objects.create_user(username=username, password=password)
         return HttpResponse('OK')
 

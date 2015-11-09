@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block main_content %}
+	<div class="form-group">		
+		<textarea class="form-control" rows="20" placeholder="貼上文本..."></textarea>
+		<br>
+		<button id="btn-paste_post" class="btn btn-primary btn-lg pull-right">上傳</button>
+	</div>
+{% endblock main_content %}
+
+{% block extra_js %}
+	<script>
+	$('#btn-paste_post').click(function() {
+		var post =  $.trim($('textarea').val());
+		if (post) {
+			var postData = {command: 'paste_post', post: post}
+			$.post('{% url "controls" %}', postData, function(resp) {
+				if (resp == 1) {
+					alert('上傳成功！')
+					$('textarea').val('');
+				} else {
+					alert('上傳失敗，若持續發生，請聯絡管理員！')
+				}
+			})
+		} else {
+			alert('請貼上文本！')
+		}
+	})
+	</script>
+{% endblock extra_js %}

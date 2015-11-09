@@ -9,11 +9,14 @@
 	<script src="http://code.highcharts.com/highcharts-3d.js"></script>
 	<script src="http://code.highcharts.com/modules/exporting.js"></script>
 	<script type="text/javascript">
-		$(function () {
-		    $('#h_tagdist').highcharts({
+		function plotTagDist(cat, data) {
+			var ele = $('<div></div>').uniqueId(),
+				div = '#'+ele.attr('id');
+			$('#h_tagdist').append(ele);
+		    $(div).highcharts({
+		    	credits: {enabled: false},
 		        chart: {
 			    	backgroundColor: null,
-			    	credits: false,
 		            type: 'pie',
 		            options3d: {
 		                enabled: true,
@@ -22,7 +25,7 @@
 		            }
 		        },
 		        title: {
-		            text: '已標記詞之分佈'
+		            text: cat
 		        },
 		        tooltip: {
 		            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -41,20 +44,22 @@
 		        series: [{
 		            type: 'pie',
 		            name: '佔所有類別',
-		            data: [
-		                ['類別一', 45.0],
-		                ['類別四', 26.8],
-		                {
-		                    name: '類別一',
-		                    y: 12.8,
-		                    sliced: true,
-		                    selected: true
-		                },
-		                ['類別二', 8.5],
-		                ['類別三', 6.9],
-		            ]
+		            data: data
 		        }]
 		    });
+		};
+
+		$(function() {
+			$.post('{% url "controls" %}', {command: 'pack_tagged_words'}, function(resp) {
+				var tagdist = JSON.parse(resp),
+					data = [];
+				$.each(tagdist, function(k, v) {
+					$.each(v, function(kk, vv) {
+						data.push([kk, vv.length])
+					});
+					plotTagDist(k, data);
+				});
+			});
 		});
 	</script>
 {% endblock extra_js %}
