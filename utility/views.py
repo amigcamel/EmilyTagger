@@ -26,6 +26,8 @@ def download_source_text(request):
         zip.write(base_filename)
 
     user = request.user.username
+    if not user:
+        user = 'guest@guest.com'
     kw = {'user': user}
     tmp_path = '/tmp/' + user
     if not os.path.isdir(tmp_path):
