@@ -247,7 +247,7 @@
             postid = json.postid;
             cand_text = cand_text.replace(/>/g, '&gt;');
             cand_text = cand_text.replace(/</g, '&lt;');
-            cand_text = cand_text.replace('\n', '<br>');
+            cand_text = cand_text.(/(?:\r\n|\r|\n)/g, '<br />');  //replace all line breaks in a string with <br /> tags, ref:http://stackoverflow.com/a/784547
             load_cand_text(cand_text);
             get_ref(catid);
 
