@@ -20,7 +20,8 @@ logger = logging.getLogger(__name__)
 def download_source_text(request):
 
     def add_zip_flat(zip, filename):
-        # avoid including absolute path; ref: http://stackoverflow.com/a/16104667/1105489
+        # avoid including absolute path; ref:
+        # http://stackoverflow.com/a/16104667/1105489
         dir, base_filename = os.path.split(filename)
         os.chdir(dir)
         zip.write(base_filename)

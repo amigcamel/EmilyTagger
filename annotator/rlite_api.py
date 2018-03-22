@@ -19,7 +19,10 @@ class DB_Conn:
         # logger.debug('rlite: Connection established')
 
     def command(self, *args):
-        '''A wrapper for Rlite.db.command which also ensures the input strings are all utf-8'''
+        """Wrap for Rlite.db.command.
+
+        which also ensures the input strings are all utf-8
+        """
         args = [i.encode('utf-8') for i in args]
         return self.db.command(*args)
 
@@ -47,7 +50,9 @@ class DB_Conn:
 
         self.command('set', uid, obj)
 
-        logger.debug('UID: %s, CUE: %s, VALUE: %s -- update successfully!' % (uid, cue, value))
+        logger.debug(
+            'UID: %s, CUE: %s, VALUE: %s -- update successfully!' %
+            (uid, cue, value))
         return True
 
     def remove(self, uid, cue):

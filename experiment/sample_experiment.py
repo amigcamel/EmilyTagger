@@ -26,9 +26,6 @@ def build_emolex_counter_extra():
     return pos, neg
 
 
-
-
-
 class SampleExp:
 
     def __init__(self):
@@ -69,7 +66,8 @@ class SampleExp:
         dic = self.to_dic_with_seg()
         for key, row in dic.iteritems():
             poses, sents, segs = zip(*row)
-            vals = [sum(((pos.get(w, 0) * 1.0) + (neg.get(w, 0) * -1.0)) for w in sent) for sent in segs]
+            vals = [sum(((pos.get(w, 0) * 1.0) + (neg.get(w, 0) * -1.0))
+                        for w in sent) for sent in segs]
             output = zip(poses, sents, segs, vals)
             dic[key] = output
         return dic
@@ -93,16 +91,16 @@ def exp2():
                     truncated_sent = sent[idx:]
                     for idx_, w in enumerate(truncated_sent):
                         if w in puncs:
-                            rlimit = idx+idx_
+                            rlimit = idx + idx_
                             truncated_sent = sent[idx:rlimit]
                             break
                     pos_val = sum(pos.get(ww, 0) for ww in truncated_sent)
                     neg_val = sum(neg.get(ww, 0) for ww in truncated_sent)
                     fin_val = pos_val * 1.0 + neg_val * -1.0
                     con.append(fin_val)
-                    break # !!!!!!!!!!!!
+                    break  # !!!!!!!!!!!!
     print len(con)
-    vals_con = zip(*[iter(con)]*10)
+    vals_con = zip(*[iter(con)] * 10)
     return vals_con
 
 
@@ -118,14 +116,24 @@ def merge():
         for x1, x2 in zip(r1, r2):
             nlst = list(x1)
             nlst.append(x2)
-            nlst = [str(i) if type(i) == float else ' '.join(i) if type(i) == list else i for i in nlst]
+            nlst = [
+                str(i) if isinstance(
+                    i, float) else ' '.join(i) if isinstance(
+                    i, list) else i for i in nlst]
             con.append(nlst)
         con_outer.append(con)
     # return OrderedDict(zip(keys, con_outer))
     con_outer = det_acc(con_outer)
     for key, rows in zip(keys, con_outer):
         # rows.insert(0, [u'POS', u'原始句', u'斷詞句', u'A_Bag_of_Word', u'Chunk_Based_way'])
-        rows.insert(0, [u'Polarity', u'原始句', u'斷詞句', u'A_Bag_of_Word', u'符合', u'Chunk_Based_way', u'符合'])
+        rows.insert(0,
+                    [u'Polarity',
+                     u'原始句',
+                     u'斷詞句',
+                     u'A_Bag_of_Word',
+                     u'符合',
+                     u'Chunk_Based_way',
+                     u'符合'])
         rows = zip(*rows)
         to_excel(rows, key, 'sample_experiment')
 
@@ -178,7 +186,16 @@ def det_acc(con_outer):
 
         abow_acc = abow_y_num / 10.0 * 100
         cba_acc = cba_y_num / 10.0 * 100
-        con.append(('', '', '', u'準確率', '%.f%%' % abow_acc, '', '%.f%%' % cba_acc))
+        con.append(
+            ('',
+             '',
+             '',
+             u'準確率',
+             '%.f%%' %
+             abow_acc,
+             '',
+             '%.f%%' %
+             cba_acc))
 
         improve = ((cba_acc - abow_acc) / abow_acc) * 100
         con.append(('', '', '', '', '', '', ''))
@@ -186,7 +203,6 @@ def det_acc(con_outer):
 
         new_con_outer.append(con)
     return new_con_outer
-
 
 
 if __name__ == '__main__':

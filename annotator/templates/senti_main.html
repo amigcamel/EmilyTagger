@@ -17,22 +17,6 @@
             </div>
         </div>
         {% endcomment %}
-    
-        <div class="row">
-            {% comment %}
-            <div class="col-lg-4">
-                <button class="btn btn-primary" data-toggle="modal" data-target="#distPie" data-intro="檢視當前用戶目前的標記分佈">標記分佈</button>
-                <button class="btn btn-primary" data-toggle="modal" data-target="#postDist">標記狀態</button>
-                <button class="btn btn-primary" data-toggle="modal" data-target="#freqDist">詞頻分佈</button>
-            </div>
-            {% endcomment %}
-            <div class="col-lg-12" style="padding-top:10px;">
-                <span>字體大小</span>
-                <div id="font-slider"></div>
-            </div>
-
-        </div>
-
     <br>
     <br>
     <div id="tag-panel-wrapper"></div>
@@ -96,16 +80,18 @@
 
         {# template 標記設定 #}
         <script id="template-tag_settings" type="text/x-handlebars-template">
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    標記設定
-                </div>
-                <div class="panel-footer">
-                    <div class="btn-group">
-                        {{#each objects}}
-                            <button id="{{this.catid}}" class="btn btn-default tag-type">{{this.cat}}</button>
-                        {{/each}}
+            <div class="box box-warning">
+                <div class="box-header with-border">
+                    <h3 class="box-title">類別設定</h3>
+                    <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
                     </div>
+                </div>
+                <div class="box-body" style="display: block;">
+                    {{#each objects}}
+                        <button id="{{this.catid}}" class="btn btn-default tag-type">{{this.cat}}</button>
+                    {{/each}}                    
                 </div>
             </div>
         </script>
@@ -132,22 +118,9 @@
                     optTemplate = Handlebars.compile(optSource),
                     optHtml = optTemplate({objects: tags});
                 $('#options').html(optHtml);
-
-                patch_cat();
-
-                // zoom-in functions for "category box"
-                var catZoom = '<div class="cat-zoom"><button class="btn btn-default" data-scale="0.1"><span class="glyphicon glyphicon-zoom-in"></span></button><button class="btn btn-default" data-scale="-0.1"><span class="glyphicon glyphicon-zoom-out"></span></button></div>';
-                $('.cat').first().append(catZoom);
-                
+                patch_cat();             
             };
 
-            $('#cat-box').on('click', '.cat-zoom button', function() {
-                var scale = parseFloat($(this).attr('data-scale')),
-                    curScale = parseFloat($('#cat-box').css('zoom'));
-
-                $('#cat-box').css('zoom', curScale+scale);
-                $('.cue').css('z-index', -9999);
-            });
         </script>
     {% endverbatim %}
 
@@ -162,7 +135,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.0.1/spin.min.js"></script>
     <script src="http://code.jquery.com/ui/1.11.2/jquery-ui.js"></script>
-    <script src="{% static "js/featherlight.js" %}"></script>
+    <script src='{% static "js/featherlight.js" %}'></script>   
     <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.2/underscore-min.js"></script>
 
@@ -247,7 +220,7 @@
             postid = json.postid;
             cand_text = cand_text.replace(/>/g, '&gt;');
             cand_text = cand_text.replace(/</g, '&lt;');
-
+            cand_text = cand_text.replace(/(?:\r\n|\r|\n)/g, '<br />');  //replace all line breaks in a string with <br /> tags, ref:http://stackoverflow.com/a/784547
             load_cand_text(cand_text);
             get_ref(catid);
 
@@ -297,8 +270,22 @@
         $('#paginator').bootstrapPaginator({
             currentPage: last_open_page,
             totalPages: totalPages,
-            numberOfPages: 5,
+            numberOfPages: 10,
             aligment: 'center',
+            itemTexts: function (type, page, current) {
+                    switch (type) {
+                    case "first":
+                        return "<i class='fa fa-backward'></i>";
+                    case "prev":
+                        return "<i class='fa fa-step-backward'></i>";
+                    case "next":
+                        return "<i class='fa fa-step-forward'></i>";
+                    case "last":
+                        return "<i class='fa fa-forward'></i>";
+                    case "page":
+                        return page;
+                    }
+                },
             onPageClicked: function(e, originalEvent, type, page) {
                 senti_main(page);
                 last_open_page = page;
@@ -417,17 +404,6 @@
         }, 500);
     });
 
-    $("#font-slider").slider({
-        value: 14,
-        min: 6,
-        max: 36,
-        step: 1,
-        slide: function (event, ui) {
-            $('#cand_text').css('font-size', ui.value);
-            $('#cat-box').css('top', 0);
-        }
-    });
-
     {# make cat-box always visible: http://stackoverflow.com/a/27630297/1105489 #}    
 
 
@@ -478,19 +454,6 @@
 
 {% block extra_css %}
     <style>
-    #font-slider {
-        float: right;
-        width: 80%;
-    }
-    #font-slider.ui-slider-horizontal {
-        height: 1em;
-    }
-
-    .ui-slider .ui-slider-handle {
-        width: 1.4em !important;
-        height: 1.4em !important;
-    }
-
     .lightbox {
         display: none;
     }

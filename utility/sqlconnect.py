@@ -20,7 +20,6 @@ class SqlConnect:
 
     def __del__(self):
         self._conn.close()
-        # logger.debug('Connection closed')
 
     def exec(self, cmd, *args):
         self._c.execute(cmd, *args)
@@ -30,8 +29,20 @@ class SqlConnect:
         return self._c.fetchall()
 
     def create_tables(self):
-        self.exec('''CREATE TABLE posts (post_id TEXT PRIMARY KEY, page INTEGER, title TEXT, source TEXT, category TEXT, post TEXT, upload_time DATE)''')
-        self.exec('''CREATE TABLE tags (id INTEGER PRIMARY KEY, schema TEXT)''')
+        self.exec('''
+            CREATE TABLE posts (
+                post_id TEXT PRIMARY KEY,
+                page INTEGER, title TEXT,
+                source TEXT, category TEXT,
+                post TEXT, upload_time DATE
+            )
+        ''')
+        self.exec('''
+            CREATE TABLE tags (
+                id INTEGER PRIMARY KEY,
+                schema TEXT
+            )
+        ''')
 
     def create_sample_tags(self):
         with open(settings.TAG_PATH) as f:
@@ -48,10 +59,12 @@ class SqlConnect:
             else:
                 page += 1
             now = datetime.now().replace(microsecond=0)
-            self.exec('''INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?, ?)''', (post_id, page, title, source, category, post, str(now)))
+            self.exec('''INSERT INTO posts VALUES (?, ?, ?, ?, ?, ?, ?)''',
+                      (post_id, page, title, source, category, post, str(now)))
 
     def hide_post(self, post_id):
-        self.exec('''UPDATE posts SET page=-1 WHERE (post_id=?)''', (post_id, ))
+        self.exec('''
+            UPDATE posts SET page=-1 WHERE (post_id=?)''', (post_id, ))
         logger.debug('Post hid: %s' % post_id)
         self.reorder()
 
@@ -62,7 +75,8 @@ class SqlConnect:
         pages = self.fetch('''SELECT page FROM posts WHERE (page!=-1)''')
         pages = sorted(i[0] for i in pages)
         for num, page in enumerate(pages, 1):
-            self.exec('''UPDATE posts SET page=? WHERE (page=?)''', (num, page))
+            self.exec(
+                '''UPDATE posts SET page=? WHERE (page=?)''', (num, page))
         logger.debug('Done reordering')
 
     @classmethod
@@ -76,7 +90,7 @@ class SqlConnect:
             # need more debugging!
             try:
                 post = post.decode('utf-8')
-            except:
+            except BaseException:
                 pass
             posts.append(post)
         return posts
