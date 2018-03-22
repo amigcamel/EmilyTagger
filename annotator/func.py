@@ -45,7 +45,8 @@ def gen_tag_dist(user, subtag):
         tags = list(chain.from_iterable([i[-1].items() for i in g]))
         tags_con.append((k, tags))
 
-    tags_con.append(('all', list(chain.from_iterable([i[1] for i in tags_con]))))
+    tags_con.append(
+        ('all', list(chain.from_iterable([i[1] for i in tags_con]))))
 
     output = OrderedDict()
     for t in tags_con:
@@ -70,6 +71,6 @@ def _dist_pie(ref, tags):
         partnum = len(set([j[0] for j in g]))
         vals.append(partnum)
     totalnum = sum(vals) * 1.0
-    percentage = [v/totalnum*100 for v in vals]
+    percentage = [v / totalnum * 100 for v in vals]
     lst = list(zip(ref, percentage))
     return lst, vals

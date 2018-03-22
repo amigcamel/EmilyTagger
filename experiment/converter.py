@@ -13,7 +13,7 @@ def to_csv(rows, filename):
     '''轉換成csv'''
     try:
         rows = [[i.encode('utf-8') for i in j] for j in rows]
-    except:
+    except BaseException:
         logger.warning(traceback.format_exc())
 
     filepath = join(OUTPUT_PATH, filename + '.csv')
@@ -29,7 +29,7 @@ def to_excel(rows, sheetname, filename):
     logger.debug('creating sheet: %s' % sheetname)
     try:
         rows = [[i.encode('utf-8') for i in j] for j in rows]
-    except:
+    except BaseException:
         logger.warning(traceback.format_exc())
 
     filepath = join(OUTPUT_PATH, filename + '.xlsx')
