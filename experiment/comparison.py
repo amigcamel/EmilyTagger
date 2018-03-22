@@ -12,6 +12,7 @@ import simplejson as json
 import multiprocessing
 import numpy
 import logging
+from functools import reduce
 
 
 # logging settings
@@ -67,7 +68,7 @@ def load_posts_seg():
     keys.insert(0, 'mget')
     posts_seg = rlite.command(*keys)
     posts_seg = [json.loads(i) for i in posts_seg]
-    posts_seg = reduce(lambda x, y: x+y, posts_seg)
+    posts_seg = reduce(lambda x, y: x + y, posts_seg)
     return posts_seg
 
 
@@ -134,7 +135,7 @@ def calc_polarity(lsts):
         freq = len(g) * 1.0
         pos = g.count('pos')
         neg = g.count('neg')
-        val = (pos*1.0 + neg*-1.0) / freq
+        val = (pos * 1.0 + neg * -1.0) / freq
         # dic[k] = val
         dic[k] = '%.5f' % val
         logger2.debug('%s | %f - %f - %f - %f' % (k, pos, neg, freq, val))

@@ -78,7 +78,8 @@ def build_cache():
         posts = [post for source, senti, post in g]
         posts_seg = multi.seg(posts)
 
-        rlite2.command('set', '%s-%s' % (source, senti), json.dumps([[j[0] for j in i] for i in posts_seg]))
+        rlite2.command('set', '%s-%s' % (source, senti),
+                       json.dumps([[j[0] for j in i] for i in posts_seg]))
 
         raws = list(chain.from_iterable(posts_seg))
         toks = [word for word, pos in raws]
@@ -172,7 +173,8 @@ def collect_tagged_word(groupname, subtag=SUBTAG):
 
 
 def wrapper():
-    groupnames = build_index_ref_by_group().keys()  # This function is used for borrowing purpose to get group names
+    # This function is used for borrowing purpose to get group names
+    groupnames = build_index_ref_by_group().keys()
     groupnames.insert(0, 'all')
     for groupname in groupnames:
         logger.debug('processing %s' % groupname)

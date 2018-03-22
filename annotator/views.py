@@ -31,7 +31,8 @@ def get_cand_text(request):
     tag, subtag = req.get('tag'), req.get('subtag')
 
     sc = SqlConnect(request.user.username)
-    res = sc.fetch('''SELECT post_id, post FROM posts WHERE page=?''', (page_num, ))
+    res = sc.fetch(
+        '''SELECT post_id, post FROM posts WHERE page=?''', (page_num, ))
     text_id, cand_text = res[0]
 
     pairs = read_pairs(text_id, tag, subtag, request.user.username)
@@ -100,13 +101,14 @@ def mod_ref(request, jdata):
         json.loads(jdata)
         sc = SqlConnect(request.user.username)
         sc.exec_('''UPDATE tags SET schema=?''', (jdata, ))
-    except:
+    except BaseException:
         logger.warning('invalid json format')
 
 
 def show_post_list(request):
     sc = SqlConnect(request.user.username)
-    res = sc.fetch('''SELECT page, title, upload_time FROM posts WHERE (page!=-1)''')
+    res = sc.fetch(
+        '''SELECT page, title, upload_time FROM posts WHERE (page!=-1)''')
     return HttpResponse(json.dumps(res, ensure_ascii=False))
 
 
@@ -148,7 +150,15 @@ def get_post_dist(request, subtag):
         uniquekeys.append(k)
     print(groups)
     raise
-    dist = [('%d~%d' % (i[0][0], i[-1][0]), i[0][1], i[0][2], sum(ii[4] for ii in i), len(dict(chain.from_iterable(ii[5].items() for ii in i)))) for i in groups]
+    dist = [
+        (
+            '%d~%d' % (i[0][0], i[-1][0]),
+            i[0][1], i[0][2], sum(ii[4] for ii in i),
+            len(dict(chain.from_iterable(ii[5].items() for ii in i)))
+        )
+        for i
+        in groups
+    ]
     return HttpResponse(json.dumps(dist))
 
 
@@ -194,7 +204,8 @@ def get_freq_dist(request, subtag='Emotion'):
     tar = ['%s-%s' % (i[1], i[2]) for i in dist]
     tar.append('all')
 
-    return HttpResponse(json.dumps(list(zip(tar, fdist_lst)), ensure_ascii=False))
+    return HttpResponse(json.dumps(
+        list(zip(tar, fdist_lst)), ensure_ascii=False))
 
 
 if __name__ == '__main__':
